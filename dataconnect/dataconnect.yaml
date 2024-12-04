@@ -1,0 +1,12 @@
+specVersion: "v1beta"
+serviceId: "y"
+location: "europe-central2"
+schema:
+  source: "./schema"
+  datasource:
+    postgresql:
+      database: "kntrafikskola"
+      cloudSql:
+        instanceId: "n"
+      # schemaValidation: "COMPATIBLE"
+connectorDirs: ["./connector"]
