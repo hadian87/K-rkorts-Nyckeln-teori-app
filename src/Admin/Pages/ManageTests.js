@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Input, Modal, Select, InputNumber, message, Typography, Space } from "antd";
+import { Table, Button, Select, InputNumber, message, Typography, Space, Modal, Input } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { db } from "../../firebaseConfig";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where } from "firebase/firestore";
@@ -14,12 +14,12 @@ const ManageTests = () => {
     mainSection: "",
     subSection: "",
     category: "",
-    duration: 50, // minuter (وقت افتراضي 50 دقيقة)
-    totalQuestions: 70, // 70 frågor
-    totalPoints: 65, // 65 poäng
-    experimentalQuestions: 5, // 5 testfrågor
-    requiredQuestionsToPass: 52, // 52 frågor behövs för att klara provet
-    passingScore: 75, // godkänd poäng (75%)
+    duration: 50,
+    totalQuestions: 70,
+    totalPoints: 65,
+    experimentalQuestions: 5,
+    requiredQuestionsToPass: 52,
+    passingScore: 75,
   });
   const [editingTest, setEditingTest] = useState(null);
   const [visible, setVisible] = useState(false);
@@ -59,16 +59,16 @@ const ManageTests = () => {
     // إذا تم إدخال عدد الأسئلة، نحسب النقاط والوقت استنادًا إلى القاعدة المحددة.
     if (key === "totalQuestions") {
       const totalQuestions = value;
-      const experimentalQuestions = testData.experimentalQuestions; // الأسئلة التجريبية
-      const requiredQuestionsToPass = Math.floor((totalQuestions - experimentalQuestions) * 0.75); // 75% من الأسئلة التي ليست تجريبية
-      const totalPoints = Math.floor((totalQuestions - experimentalQuestions) * (65 / 65)); // حساب النقاط بناءً على الأسئلة
-      const duration = Math.floor(totalQuestions * 0.714); // حساب الوقت بناءً على عدد الأسئلة
+      const experimentalQuestions = testData.experimentalQuestions;
+      const requiredQuestionsToPass = Math.floor((totalQuestions - experimentalQuestions) * 0.75);
+      const totalPoints = Math.floor((totalQuestions - experimentalQuestions) * (65 / 65));
+      const duration = Math.floor(totalQuestions * 0.714);
 
       updatedTestData = {
         ...updatedTestData,
-        requiredQuestionsToPass: requiredQuestionsToPass, // تحديث الأسئلة المطلوبة للنجاح
-        totalPoints: totalPoints, // تحديث النقاط الإجمالية
-        duration: duration, // تحديث الوقت المطلوب
+        requiredQuestionsToPass: requiredQuestionsToPass,
+        totalPoints: totalPoints,
+        duration: duration,
       };
     }
 

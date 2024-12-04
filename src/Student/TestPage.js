@@ -35,10 +35,10 @@ const TestPage = () => {
           const data = testSnapshot.data();
           setTestSettings(data);
           if (!timeLeft) {
-            setTimeLeft(data.duration * 60);
+            setTimeLeft(data.duration * 60); // Set timer duration
           }
 
-          // Hämta frågor relaterade till huvudsektion, undersektion och kategori
+          // Fetch questions related to the main section, sub-section, and category
           const questionsRef = collection(db, 'questions');
           const q = query(
             questionsRef,
@@ -52,12 +52,12 @@ const TestPage = () => {
             ...doc.data(),
           }));
 
-          // Välj ett slumpmässigt antal frågor
+          // Randomize and slice questions
           questionsData = questionsData.sort(() => Math.random() - 0.5).slice(0, data.totalQuestions);
           setQuestions(questionsData);
         }
       } catch (error) {
-        console.error("Fel vid hämtning av testdata:", error);
+        console.error("Error fetching test data:", error);
       } finally {
         setLoading(false);
       }
@@ -72,7 +72,7 @@ const TestPage = () => {
         setTimeLeft((prevTime) => {
           if (prevTime === 0) {
             clearInterval(countdown);
-            handleFinishTest(); // Tiden är slut
+            handleFinishTest(); // Time is up
             return 0;
           }
           localStorage.setItem('timeLeft', prevTime - 1);
@@ -132,18 +132,18 @@ const TestPage = () => {
             options: question.options,
             correctAnswer: question.correctAnswer,
             selectedAnswer: selectedAnswer[index] || null,
-            images: question.images || [], // Lägg till bilder i resultaten
+            images: question.images || [], // Add images to the results
           })),
         });
-        console.log('Testresultat sparat!');
-        message.success('Testresultat sparat!');
+        console.log('Test result saved!');
+        message.success('Test result saved!');
       } else {
-        console.error('Ingen användare är inloggad.');
-        message.error('Ingen användare är inloggad.');
+        console.error('No user logged in.');
+        message.error('No user logged in.');
       }
     } catch (error) {
-      console.error('Fel vid sparande av testresultat:', error);
-      message.error('Fel vid sparande av testresultat.');
+      console.error('Error saving test result:', error);
+      message.error('Error saving test result.');
     }
 
     navigate('/student/result', {
@@ -184,12 +184,12 @@ const TestPage = () => {
 
   const handleExitTest = () => {
     confirm({
-      title: 'Vill du verkligen avsluta testet?',
+      title: 'Are you sure you want to exit the test?',
       icon: <ExclamationCircleOutlined />,
-      content: 'Om du lämnar nu kommer testet att anses vara ofullständigt och din framsteg kommer inte att sparas.',
-      okText: 'Ja, lämna',
+      content: 'If you leave now, the test will be considered incomplete and your progress will not be saved.',
+      okText: 'Yes, exit',
       okType: 'danger',
-      cancelText: 'Nej, stanna',
+      cancelText: 'No, stay',
       onOk() {
         localStorage.removeItem('currentQuestionIndex');
         localStorage.removeItem('correctAnswers');
@@ -218,8 +218,8 @@ const TestPage = () => {
     setIsExplanationVisible(false);
   };
 
-  if (loading) return <p>Laddar...</p>;
-  if (!testSettings || questions.length === 0) return <p>Ingen testinställningar eller frågor hittades.</p>;
+  if (loading) return <p>Loading...</p>;
+  if (!testSettings || questions.length === 0) return <p>No test settings or questions found.</p>;
 
   const currentQuestion = questions[currentQuestionIndex];
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
@@ -229,11 +229,11 @@ const TestPage = () => {
       <Content style={{ background: '#f0f5ff', padding: '24px', borderRadius: '10px', boxShadow: '0 6px 20px rgba(0, 0, 0, 0.1)' }}>
         <Title level={2} style={{ color: '#003a8c', textAlign: 'center', marginBottom: '20px' }}>{testSettings.name}</Title>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <Text style={{ fontSize: '16px', color: '#0050b3' }}>⏳ Tid kvar: {Math.floor(timeLeft / 60)}:{timeLeft % 60}</Text>
-          <Text style={{ fontSize: '16px', color: '#0050b3' }}>🏆 Godkänd poäng: {testSettings.passingScore}%</Text>
-          <Text style={{ fontSize: '16px', color: '#0050b3' }}>📋 Fråga {currentQuestionIndex + 1} av {questions.length}</Text>
+          <Text style={{ fontSize: '16px', color: '#0050b3' }}>⏳ Time left: {Math.floor(timeLeft / 60)}:{timeLeft % 60}</Text>
+          <Text style={{ fontSize: '16px', color: '#0050b3' }}>🏆 Passing score: {testSettings.passingScore}%</Text>
+          <Text style={{ fontSize: '16px', color: '#0050b3' }}>📋 Question {currentQuestionIndex + 1} of {questions.length}</Text>
           <Button type="primary" danger onClick={handleExitTest}>
-            Avsluta testet
+            Exit Test
           </Button>
         </div>
 
@@ -324,15 +324,15 @@ const TestPage = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
               <Button onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0}>
-                Föregående
+                Previous
               </Button>
               {currentQuestion.explanation && selectedAnswer[currentQuestionIndex] && (
                 <Button type="default" onClick={handleExplanationClick} style={{ backgroundColor: '#ffeb3b' }}>
-                  Förklaring
+                  Explanation
                 </Button>
               )}
               <Button type="primary" onClick={handleNextQuestion}>
-                {currentQuestionIndex === questions.length - 1 ? 'Avsluta' : 'Nästa'}
+                {currentQuestionIndex === questions.length - 1 ? 'Finish' : 'Next'}
               </Button>
             </div>
           </Card>
@@ -345,7 +345,7 @@ const TestPage = () => {
 
       <Modal visible={isExplanationVisible} footer={null} onCancel={handleCloseExplanation} centered>
         <div style={{ padding: '20px' }}>
-          <Title level={4}>Förklaring</Title>
+          <Title level={4}>Explanation</Title>
           <Text>{currentQuestion.explanation}</Text>
           {currentQuestion.explanationImages && currentQuestion.explanationImages.length > 0 && (
             <div style={{
@@ -359,7 +359,7 @@ const TestPage = () => {
                 <img
                   key={index}
                   src={image}
-                  alt={`Förklaring ${index + 1}`}
+                  alt={`Explanation ${index + 1}`}
                   style={{
                     width: '100%',
                     maxWidth: '250px',

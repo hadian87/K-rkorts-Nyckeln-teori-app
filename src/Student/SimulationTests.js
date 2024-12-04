@@ -9,13 +9,13 @@ const { Option } = Select;
 const SimulationTests = () => {
   const [tests, setTests] = useState([]);
   const [filteredTests, setFilteredTests] = useState([]);
-  const [loading, setLoading] = useState(true); // مؤشر التحميل
-  const [searchTerm, setSearchTerm] = useState(""); // البحث
-  const [sortOption, setSortOption] = useState("name"); // خيار الترتيب الافتراضي
+  const [loading, setLoading] = useState(true); // Loading indicator
+  const [searchTerm, setSearchTerm] = useState(""); // Search term
+  const [sortOption, setSortOption] = useState("name"); // Default sort option
   const navigate = useNavigate();
 
   useEffect(() => {
-    // بيانات ثابتة للاختبارات لاختبار ظهور البطاقات
+    // Static data for tests for testing card display
     const fetchTests = async () => {
       try {
         const testsList = [
@@ -25,11 +25,11 @@ const SimulationTests = () => {
           { id: "4", name: "Sample Test 4", description: "A fourth sample test description" },
         ];
         setTests(testsList);
-        setFilteredTests(testsList); // عرض جميع الاختبارات في البداية
+        setFilteredTests(testsList); // Display all tests initially
       } catch (error) {
         message.error("Failed to fetch tests from Firebase.");
       } finally {
-        setLoading(false); // إيقاف مؤشر التحميل بعد إضافة البيانات الثابتة
+        setLoading(false); // Stop loading indicator after adding static data
       }
     };
 
@@ -37,26 +37,26 @@ const SimulationTests = () => {
   }, []);
 
   const handleTestClick = (testId) => {
-    navigate(`/simulation-tests/${testId}`); // الانتقال إلى صفحة تفاصيل الاختبار
+    navigate(`/simulation-tests/${testId}`); // Navigate to test details page
   };
 
-  // تحديث نتائج البحث
+  // Update search results
   const handleSearch = (value) => {
     setSearchTerm(value);
     if (value) {
       const filtered = tests.filter((test) => test.name.toLowerCase().includes(value.toLowerCase()));
       setFilteredTests(filtered);
     } else {
-      setFilteredTests(tests); // إذا كانت خانة البحث فارغة، نعرض كل الاختبارات
+      setFilteredTests(tests); // If search is empty, show all tests
     }
   };
 
-  // تحديث ترتيب الاختبارات
+  // Update test sorting
   const handleSortChange = (value) => {
     setSortOption(value);
     const sortedTests = [...filteredTests].sort((a, b) => {
       if (value === "name") return a.name.localeCompare(b.name);
-      if (value === "date") return new Date(b.date) - new Date(a.date); // ترتيب حسب التاريخ إذا وجد
+      if (value === "date") return new Date(b.date) - new Date(a.date); // Sort by date if available
       return 0;
     });
     setFilteredTests(sortedTests);
@@ -66,7 +66,7 @@ const SimulationTests = () => {
     <div style={{ padding: "24px" }}>
       <Title level={2} style={{ textAlign: "center", marginBottom: "24px" }}>Simulation Tests</Title>
 
-      {/* شريط البحث وخيارات الترتيب */}
+      {/* Search bar and sort options */}
       <Row gutter={[16, 16]} style={{ marginBottom: "24px" }}>
         <Col xs={24} sm={12} md={8}>
           <Search

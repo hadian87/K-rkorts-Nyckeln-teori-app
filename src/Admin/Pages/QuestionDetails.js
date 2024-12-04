@@ -1,4 +1,3 @@
-// QuestionDetails.js
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Typography, Box, Paper, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
@@ -22,7 +21,7 @@ const QuestionDetails = () => {
   };
 
   const handleSaveClick = () => {
-    // Här skulle du inkludera logik för att spara den redigerade frågan, t.ex. uppdatera Firebase
+    // Placeholder logic to save the edited question (you would update Firebase here)
     setIsEditing(false);
   };
 
@@ -35,9 +34,9 @@ const QuestionDetails = () => {
   };
 
   const handleDeleteConfirm = () => {
-    // Här skulle du inkludera logik för att ta bort frågan, t.ex. ta bort från Firebase
+    // Placeholder logic to delete the question (you would delete it from Firebase here)
     setDeleteDialogOpen(false);
-    navigate("/admin/question-list"); // Navigera tillbaka till frågelistan efter borttagning
+    navigate("/admin/question-list"); // Navigate back to the question list after deletion
   };
 
   const handleDeleteCancel = () => {
@@ -45,7 +44,7 @@ const QuestionDetails = () => {
   };
 
   const handleBackClick = () => {
-    navigate("/admin/question-list"); // Navigera tillbaka till frågelistan
+    navigate("/admin/question-list"); // Navigate back to the question list
   };
 
   return (

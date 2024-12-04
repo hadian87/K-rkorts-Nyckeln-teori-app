@@ -2,24 +2,12 @@ import React, { useState, useEffect } from "react";
 import {
   TextField,
   Button,
-  Select,
   MenuItem,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   IconButton,
   Typography,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Tooltip,
 } from "@mui/material";
-import { Add, Edit, Delete, UploadFile, Remove, Close } from "@mui/icons-material";
-import { collection, addDoc, getDocs, query, where, deleteDoc, doc } from "firebase/firestore";
+import { Add, Remove, Close } from "@mui/icons-material";
+import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../firebaseConfig";
 
@@ -39,9 +27,6 @@ const QuestionManager = () => {
   const [mainCategories, setMainCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [editIndex, setEditIndex] = useState(null);
-  const [openConfirm, setOpenConfirm] = useState(false);
-  const [deleteIndex, setDeleteIndex] = useState(null);
 
   useEffect(() => {
     fetchMainCategories();
@@ -209,40 +194,6 @@ const QuestionManager = () => {
     });
   };
 
-  const handleEditQuestion = (index) => {
-    setEditIndex(index);
-    setNewQuestion({ ...questions[index] });
-  };
-
-  const handleUpdateQuestion = () => {
-    const updatedQuestions = [...questions];
-    updatedQuestions[editIndex] = { ...newQuestion };
-    setQuestions(updatedQuestions);
-    setEditIndex(null);
-    setNewQuestion({
-      mainSection: "",
-      subSection: "",
-      category: "",
-      questionText: "",
-      options: [""],
-      correctAnswer: "",
-      images: [],
-      explanation: "",
-      explanationImages: [],
-    });
-  };
-
-  const handleDeleteQuestion = async () => {
-    const questionToDelete = questions[deleteIndex];
-    try {
-      await deleteDoc(doc(db, "questions", questionToDelete.id));
-      setQuestions(questions.filter((_, i) => i !== deleteIndex));
-      setOpenConfirm(false);
-    } catch (error) {
-      console.error("Error deleting question: ", error);
-    }
-  };
-
   return (
     <div style={{ padding: "20px" }}>
       <Typography variant="h5">Frågehanterare</Typography>
@@ -387,26 +338,11 @@ const QuestionManager = () => {
       <Button
         variant="contained"
         color="primary"
-        onClick={editIndex === null ? handleAddQuestion : handleUpdateQuestion}
+        onClick={handleAddQuestion}
         style={{ marginTop: "20px" }}
       >
-        {editIndex === null ? "Lägg till fråga" : "Uppdatera fråga"}
+        Lägg till fråga
       </Button>
-
-      <Dialog open={openConfirm} onClose={() => setOpenConfirm(false)}>
-        <DialogTitle>Bekräfta borttagning</DialogTitle>
-        <DialogContent>
-          Är du säker på att du vill ta bort denna fråga?
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenConfirm(false)} color="primary">
-            Avbryt
-          </Button>
-          <Button onClick={handleDeleteQuestion} color="secondary">
-            Ta bort
-          </Button>
-        </DialogActions>
-      </Dialog>
     </div>
   );
 };

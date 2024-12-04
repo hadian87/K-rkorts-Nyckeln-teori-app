@@ -3,7 +3,6 @@ import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Selec
 import { db } from "../../firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { AppstoreOutlined } from '@ant-design/icons';  // Updated Icon import
 
 const QuestionList = () => {
   const [questions, setQuestions] = useState([]);
