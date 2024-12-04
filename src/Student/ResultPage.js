@@ -12,10 +12,6 @@ const ResultPage = () => {
   const {
     correctAnswers,
     totalQuestions,
-    mainCategoryName,
-    subCategoryName,
-    categoryName,
-    testName,
   } = location.state || {};
 
   // Calculating the result as a percentage

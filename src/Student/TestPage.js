@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { doc, collection, query, where, getDoc, getDocs, addDoc } from 'firebase/firestore';
@@ -38,7 +38,6 @@ const TestPage = () => {
             setTimeLeft(data.duration * 60); // Set timer duration
           }
 
-          // Fetch questions related to the main section, sub-section, and category
           const questionsRef = collection(db, 'questions');
           const q = query(
             questionsRef,
@@ -52,59 +51,20 @@ const TestPage = () => {
             ...doc.data(),
           }));
 
-          // Randomize and slice questions
           questionsData = questionsData.sort(() => Math.random() - 0.5).slice(0, data.totalQuestions);
           setQuestions(questionsData);
         }
       } catch (error) {
-        console.error("Error fetching test data:", error);
+        console.error('Error fetching test data:', error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchTestData();
-  }, [testId]);
+  }, [testId, timeLeft]);
 
-  useEffect(() => {
-    if (timeLeft !== null) {
-      const countdown = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime === 0) {
-            clearInterval(countdown);
-            handleFinishTest(); // Time is up
-            return 0;
-          }
-          localStorage.setItem('timeLeft', prevTime - 1);
-          return prevTime - 1;
-        });
-      }, 1000);
-      setTimer(countdown);
-    }
-
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  useEffect(() => {
-    localStorage.setItem('currentQuestionIndex', currentQuestionIndex);
-    localStorage.setItem('correctAnswers', correctAnswers);
-    localStorage.setItem('selectedAnswers', JSON.stringify(selectedAnswer));
-  }, [currentQuestionIndex, correctAnswers, selectedAnswer]);
-
-  const handleAnswerSelection = (answer) => {
-    if (!selectedAnswer[currentQuestionIndex]) {
-      setSelectedAnswer((prevAnswers) => ({
-        ...prevAnswers,
-        [currentQuestionIndex]: answer,
-      }));
-      const currentQuestion = questions[currentQuestionIndex];
-      if (answer === currentQuestion.correctAnswer) {
-        setCorrectAnswers((prevCorrect) => prevCorrect + 1);
-      }
-    }
-  };
-
-  const handleFinishTest = async () => {
+  const handleFinishTest = useCallback(async () => {
     localStorage.removeItem('currentQuestionIndex');
     localStorage.removeItem('correctAnswers');
     localStorage.removeItem('timeLeft');
@@ -132,13 +92,11 @@ const TestPage = () => {
             options: question.options,
             correctAnswer: question.correctAnswer,
             selectedAnswer: selectedAnswer[index] || null,
-            images: question.images || [], // Add images to the results
+            images: question.images || [],
           })),
         });
-        console.log('Test result saved!');
         message.success('Test result saved!');
       } else {
-        console.error('No user logged in.');
         message.error('No user logged in.');
       }
     } catch (error) {
@@ -158,6 +116,44 @@ const TestPage = () => {
         testName: testSettings.name,
       },
     });
+  }, [correctAnswers, questions, selectedAnswer, testSettings, navigate]);
+
+  useEffect(() => {
+    if (timeLeft !== null) {
+      const countdown = setInterval(() => {
+        setTimeLeft((prevTime) => {
+          if (prevTime === 0) {
+            clearInterval(countdown);
+            handleFinishTest(); // Time is up
+            return 0;
+          }
+          localStorage.setItem('timeLeft', prevTime - 1);
+          return prevTime - 1;
+        });
+      }, 1000);
+      setTimer(countdown);
+    }
+
+    return () => clearInterval(timer);
+  }, [timeLeft, handleFinishTest, timer]);
+
+  useEffect(() => {
+    localStorage.setItem('currentQuestionIndex', currentQuestionIndex);
+    localStorage.setItem('correctAnswers', correctAnswers);
+    localStorage.setItem('selectedAnswers', JSON.stringify(selectedAnswer));
+  }, [currentQuestionIndex, correctAnswers, selectedAnswer]);
+
+  const handleAnswerSelection = (answer) => {
+    if (!selectedAnswer[currentQuestionIndex]) {
+      setSelectedAnswer((prevAnswers) => ({
+        ...prevAnswers,
+        [currentQuestionIndex]: answer,
+      }));
+      const currentQuestion = questions[currentQuestionIndex];
+      if (answer === currentQuestion.correctAnswer) {
+        setCorrectAnswers((prevCorrect) => prevCorrect + 1);
+      }
+    }
   };
 
   const handleNextQuestion = () => {
@@ -200,6 +196,7 @@ const TestPage = () => {
     });
   };
 
+  // Image modal handlers
   const handleImageClick = (image) => {
     setModalImage(image);
     setIsImageModalVisible(true);
@@ -232,9 +229,7 @@ const TestPage = () => {
           <Text style={{ fontSize: '16px', color: '#0050b3' }}>⏳ Time left: {Math.floor(timeLeft / 60)}:{timeLeft % 60}</Text>
           <Text style={{ fontSize: '16px', color: '#0050b3' }}>🏆 Passing score: {testSettings.passingScore}%</Text>
           <Text style={{ fontSize: '16px', color: '#0050b3' }}>📋 Question {currentQuestionIndex + 1} of {questions.length}</Text>
-          <Button type="primary" danger onClick={handleExitTest}>
-            Exit Test
-          </Button>
+          <Button type="primary" danger onClick={handleExitTest}>Exit Test</Button>
         </div>
 
         <Divider />
@@ -249,18 +244,10 @@ const TestPage = () => {
               onClick={toggleMarkQuestion}
               style={{ position: 'absolute', top: '15px', right: '15px', fontSize: '24px', color: '#0050b3' }}
             />
-            <Title level={4} style={{ color: '#003a8c' }}>
-              {currentQuestionIndex + 1}. {currentQuestion.questionText}
-            </Title>
+            <Title level={4} style={{ color: '#003a8c' }}>{currentQuestionIndex + 1}. {currentQuestion.questionText}</Title>
 
             {currentQuestion.images && currentQuestion.images.length > 0 && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '10px',
-                flexWrap: 'wrap',
-                marginBottom: '15px'
-              }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
                 {currentQuestion.images.map((image, index) => (
                   <img
                     key={index}
@@ -272,7 +259,7 @@ const TestPage = () => {
                       objectFit: 'contain',
                       borderRadius: '8px',
                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
                     }}
                     onClick={() => handleImageClick(image)}
                     onError={(e) => { e.target.style.display = 'none'; }}
@@ -323,9 +310,7 @@ const TestPage = () => {
             ))}
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-              <Button onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0}>
-                Previous
-              </Button>
+              <Button onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0}>Previous</Button>
               {currentQuestion.explanation && selectedAnswer[currentQuestionIndex] && (
                 <Button type="default" onClick={handleExplanationClick} style={{ backgroundColor: '#ffeb3b' }}>
                   Explanation
@@ -365,7 +350,7 @@ const TestPage = () => {
                     maxWidth: '250px',
                     objectFit: 'contain',
                     borderRadius: '8px',
-                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
                   }}
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />

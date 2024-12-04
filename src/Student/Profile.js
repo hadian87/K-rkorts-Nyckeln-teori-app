@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Form, Input, Button, Select, Layout, Typography, Spin, Divider, Row, Col, Upload, message } from 'antd';
+import { Card, Form, Button, Layout, Typography, Spin, Divider, Row, Col, Upload, message } from 'antd';
 import { UploadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { db, storage } from '../firebaseConfig';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -9,7 +9,6 @@ import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
-const { Option } = Select;
 
 const Profile = () => {
   const [form] = Form.useForm();

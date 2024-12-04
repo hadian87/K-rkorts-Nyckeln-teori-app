@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { Button, Card, Col, Row, Typography, Layout, Spin, Tooltip, message, Menu } from 'antd';
-import { HomeOutlined, UserOutlined, BellOutlined, BarChartOutlined, TrophyOutlined, ClockCircleOutlined, CheckCircleOutlined, QuestionCircleOutlined, LogoutOutlined } from '@ant-design/icons';
+import { Button, Card, Col, Row, Typography, Layout, Spin, message } from 'antd';
+import { ClockCircleOutlined, QuestionCircleOutlined, CheckCircleOutlined, TrophyOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 import Navbar from './Navbar'; // Include common navbar
 
@@ -95,18 +95,6 @@ const TestsPage = () => {
       console.error('Fel vid start av test:', error);
       message.error('Fel vid start av test. Försök igen senare.');
     }
-  };
-
-  const handleLogout = () => {
-    message.confirm({
-      title: 'Är du säker på att du vill logga ut?',
-      content: 'Du kommer att omdirigeras till inloggningssidan.',
-      okText: 'Ja',
-      cancelText: 'Nej',
-      onOk: () => {
-        navigate('/login');
-      },
-    });
   };
 
   return (

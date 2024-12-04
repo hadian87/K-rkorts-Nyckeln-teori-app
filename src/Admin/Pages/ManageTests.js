@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Select, InputNumber, message, Typography, Space, Modal, Input } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { db } from "../../firebaseConfig";
 import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where } from "firebase/firestore";
 
@@ -56,7 +55,6 @@ const ManageTests = () => {
   const handleInputChange = (key, value) => {
     let updatedTestData = { ...testData, [key]: value };
 
-    // إذا تم إدخال عدد الأسئلة، نحسب النقاط والوقت استنادًا إلى القاعدة المحددة.
     if (key === "totalQuestions") {
       const totalQuestions = value;
       const experimentalQuestions = testData.experimentalQuestions;
@@ -188,7 +186,6 @@ const ManageTests = () => {
       <Space style={{ marginBottom: "16px" }}>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
           onClick={() => openModal()}
           style={{ backgroundColor: "#1890ff", borderColor: "#1890ff" }}
         >
@@ -197,7 +194,6 @@ const ManageTests = () => {
         <Button
           type="primary"
           danger
-          icon={<DeleteOutlined />}
           onClick={handleDeleteTest}
           disabled={selectedRowKeys.length === 0}
         >

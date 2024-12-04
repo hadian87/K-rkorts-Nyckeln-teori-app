@@ -127,7 +127,7 @@ const QuestionDetails = () => {
               <img
                 key={index}
                 src={image}
-                alt={`Question Image ${index}`}
+                alt={`Question ${index}`}  // تم إزالة كلمة "image" من سمة alt
                 style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)" }}
               />
             ))}
@@ -143,7 +143,7 @@ const QuestionDetails = () => {
               <img
                 key={index}
                 src={image}
-                alt={`Explanation Image ${index}`}
+                alt={`Explanation ${index}`}  // تم إزالة كلمة "image" من سمة alt
                 style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)" }}
               />
             ))}

@@ -9,9 +9,7 @@ const { Option } = Select;
 const SimulationTests = () => {
   const [tests, setTests] = useState([]);
   const [filteredTests, setFilteredTests] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading indicator
   const [searchTerm, setSearchTerm] = useState(""); // Search term
-  const [sortOption, setSortOption] = useState("name"); // Default sort option
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,8 +26,6 @@ const SimulationTests = () => {
         setFilteredTests(testsList); // Display all tests initially
       } catch (error) {
         message.error("Failed to fetch tests from Firebase.");
-      } finally {
-        setLoading(false); // Stop loading indicator after adding static data
       }
     };
 
@@ -53,10 +49,8 @@ const SimulationTests = () => {
 
   // Update test sorting
   const handleSortChange = (value) => {
-    setSortOption(value);
     const sortedTests = [...filteredTests].sort((a, b) => {
       if (value === "name") return a.name.localeCompare(b.name);
-      if (value === "date") return new Date(b.date) - new Date(a.date); // Sort by date if available
       return 0;
     });
     setFilteredTests(sortedTests);
@@ -88,41 +82,37 @@ const SimulationTests = () => {
         </Col>
       </Row>
 
-      {loading ? (
-        <div style={{ textAlign: "center", padding: "50px" }}>
-          <Spin size="large" tip="Loading tests..." />
-        </div>
-      ) : (
-        <Row gutter={[16, 16]}>
-          {filteredTests.map((test) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={test.id}>
-              <Card
-                hoverable
-                style={{
-                  textAlign: "center",
-                  borderRadius: "10px",
-                  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-                  transition: "transform 0.3s ease, box-shadow 0.3s ease",
-                  cursor: "pointer",
-                }}
-                onClick={() => handleTestClick(test.id)}
-                bodyStyle={{ padding: "20px" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "scale(1.05)";
-                  e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "scale(1)";
-                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
-                }}
-              >
-                <Title level={4} style={{ color: "#1890ff" }}>{test.name || "Untitled Test"}</Title>
-                <Text>{test.description || "Click to start the test"}</Text>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      )}
+      <Spin size="large" tip="Loading tests..." style={{ display: "block", margin: "auto" }} />
+
+      <Row gutter={[16, 16]}>
+        {filteredTests.map((test) => (
+          <Col xs={24} sm={12} md={8} lg={6} key={test.id}>
+            <Card
+              hoverable
+              style={{
+                textAlign: "center",
+                borderRadius: "10px",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+                transition: "transform 0.3s ease, box-shadow 0.3s ease",
+                cursor: "pointer",
+              }}
+              onClick={() => handleTestClick(test.id)}
+              bodyStyle={{ padding: "20px" }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "scale(1.05)";
+                e.currentTarget.style.boxShadow = "0 8px 16px rgba(0, 0, 0, 0.2)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "scale(1)";
+                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.1)";
+              }}
+            >
+              <Title level={4} style={{ color: "#1890ff" }}>{test.name || "Untitled Test"}</Title>
+              <Text>{test.description || "Click to start the test"}</Text>
+            </Card>
+          </Col>
+        ))}
+      </Row>
     </div>
   );
 };
