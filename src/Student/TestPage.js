@@ -35,7 +35,7 @@ const TestPage = () => {
           const data = testSnapshot.data();
           setTestSettings(data);
           if (!timeLeft) {
-            setTimeLeft(data.duration * 60); // Set timer duration
+            setTimeLeft(data.duration * 60);
           }
 
           const questionsRef = collection(db, 'questions');
@@ -124,7 +124,7 @@ const TestPage = () => {
         setTimeLeft((prevTime) => {
           if (prevTime === 0) {
             clearInterval(countdown);
-            handleFinishTest(); // Time is up
+            handleFinishTest();
             return 0;
           }
           localStorage.setItem('timeLeft', prevTime - 1);
@@ -191,7 +191,7 @@ const TestPage = () => {
         localStorage.removeItem('correctAnswers');
         localStorage.removeItem('timeLeft');
         localStorage.removeItem('selectedAnswers');
-        navigate('/student/tests/oW4IpZqamd9SI8V6muPC/EE46IZydsuJYtF6Lpdov');
+        navigate('/student/tests');
       },
     });
   };
