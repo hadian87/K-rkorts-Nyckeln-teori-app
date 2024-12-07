@@ -13,7 +13,7 @@ import AddQuestion from "./Admin/Pages/AddQuestion";
 import ManageTests from "./Admin/Pages/ManageTests";
 import LoginPage from "./Admin/Pages/LoginPage";
 import Dashboard from "./Admin/Pages/Dashboard";
-import StudentDashboard from './Student/StudentDashboard';
+import StudentDashboard from "./Student/StudentDashboard";
 import TheoryContent from "./Student/TheoryContent";
 import PerformanceAnalysis from "./Student/PerformanceAnalysis";
 import Notifications from "./Student/Notifications";
@@ -21,12 +21,13 @@ import SubCategories from "./Student/SubCategories";
 import TestsPage from "./Student/TestsPage";
 import TestPage from "./Student/TestPage";
 import ResultPage from "./Student/ResultPage";
-import TestReviewPage from "./Student/TestReviewPage.js"; // استيراد صفحة مراجعة الاختبار
+import TestReviewPage from "./Student/TestReviewPage";
 import CategoryManagement from "./Admin/Pages/CategoryManagement";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ManageNotifications from "./Admin/Pages/ManageNotifications";
 import QuestionList from "./Admin/Pages/QuestionList";
 import QuestionDetails from "./Admin/Pages/QuestionDetails";
+import UserDetails from "./Admin/Pages/UserDetails";
 
 const App = () => {
   return (
@@ -56,6 +57,7 @@ const App = () => {
             <Route path="category-management" element={<CategoryManagement />} />
             <Route path="manage-notifications" element={<ManageNotifications />} />
             <Route path="question-details/:id" element={<QuestionDetails />} />
+            <Route path="user-details/:userId" element={<UserDetails />} />
           </Route>
 
           {/* مسارات الطالب */}

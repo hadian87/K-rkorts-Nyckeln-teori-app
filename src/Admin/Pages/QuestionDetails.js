@@ -1,6 +1,17 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Typography, Box, Paper, Button, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import {
+  Typography,
+  Box,
+  Paper,
+  Button,
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
 import { Edit, Delete, Save, ArrowBack } from "@mui/icons-material";
 
 const QuestionDetails = () => {
@@ -11,6 +22,8 @@ const QuestionDetails = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedQuestion, setEditedQuestion] = useState(question);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [newImages, setNewImages] = useState([]);
+  const [newExplanationImages, setNewExplanationImages] = useState([]);
 
   if (!question) {
     return <Typography variant="h5">Ingen frågedetaljer tillgängliga.</Typography>;
@@ -21,7 +34,17 @@ const QuestionDetails = () => {
   };
 
   const handleSaveClick = () => {
-    // Placeholder logic to save the edited question (you would update Firebase here)
+    // Save updated data to database
+    const updatedQuestion = {
+      ...editedQuestion,
+      images: newImages.length > 0 ? newImages : editedQuestion.images,
+      explanationImages:
+        newExplanationImages.length > 0 ? newExplanationImages : editedQuestion.explanationImages,
+    };
+
+    console.log("Saving question:", updatedQuestion);
+    // Implement Firebase save logic here
+
     setIsEditing(false);
   };
 
@@ -29,14 +52,26 @@ const QuestionDetails = () => {
     setEditedQuestion((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    const fileUrls = files.map((file) => URL.createObjectURL(file)); // Replace with Firebase upload logic
+    setNewImages(fileUrls);
+  };
+
+  const handleExplanationImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    const fileUrls = files.map((file) => URL.createObjectURL(file)); // Replace with Firebase upload logic
+    setNewExplanationImages(fileUrls);
+  };
+
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = () => {
-    // Placeholder logic to delete the question (you would delete it from Firebase here)
+    // Implement delete logic here
     setDeleteDialogOpen(false);
-    navigate("/admin/question-list"); // Navigate back to the question list after deletion
+    navigate("/admin/question-list");
   };
 
   const handleDeleteCancel = () => {
@@ -44,7 +79,7 @@ const QuestionDetails = () => {
   };
 
   const handleBackClick = () => {
-    navigate("/admin/question-list"); // Navigate back to the question list
+    navigate("/admin/question-list");
   };
 
   return (
@@ -57,10 +92,15 @@ const QuestionDetails = () => {
         boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
       }}
     >
-      <Typography variant="h4" gutterBottom style={{ color: "#3f51b5", fontWeight: "bold" }}>
+      <Typography
+        variant="h4"
+        gutterBottom
+        style={{ color: "#3f51b5", fontWeight: "bold" }}
+      >
         Frågedetaljer
       </Typography>
 
+      {/* Question Text */}
       <Box marginBottom="20px">
         <Typography variant="h6" style={{ color: "#333" }}>Fråga:</Typography>
         {isEditing ? (
@@ -69,13 +109,13 @@ const QuestionDetails = () => {
             value={editedQuestion.questionText}
             onChange={(e) => handleInputChange("questionText", e.target.value)}
             variant="outlined"
-            style={{ backgroundColor: "#fff" }}
           />
         ) : (
-          <Typography variant="body1" style={{ padding: "10px 0", fontSize: "1.1rem" }}>{editedQuestion.questionText}</Typography>
+          <Typography variant="body1">{editedQuestion.questionText}</Typography>
         )}
       </Box>
 
+      {/* Options */}
       <Box marginBottom="20px">
         <Typography variant="h6" style={{ color: "#333" }}>Alternativ:</Typography>
         {isEditing ? (
@@ -90,20 +130,19 @@ const QuestionDetails = () => {
                 handleInputChange("options", updatedOptions);
               }}
               variant="outlined"
-              style={{ marginBottom: "10px", backgroundColor: "#fff" }}
+              style={{ marginBottom: "10px" }}
             />
           ))
         ) : (
-          <ul style={{ paddingLeft: "20px" }}>
+          <ul>
             {editedQuestion.options.map((option, index) => (
-              <li key={index} style={{ marginBottom: "5px" }}>
-                <Typography variant="body1" style={{ fontSize: "1rem" }}>{option}</Typography>
-              </li>
+              <li key={index}>{option}</li>
             ))}
           </ul>
         )}
       </Box>
 
+      {/* Correct Answer */}
       <Box marginBottom="20px">
         <Typography variant="h6" style={{ color: "#333" }}>Rätt svar:</Typography>
         {isEditing ? (
@@ -112,44 +151,59 @@ const QuestionDetails = () => {
             value={editedQuestion.correctAnswer}
             onChange={(e) => handleInputChange("correctAnswer", e.target.value)}
             variant="outlined"
-            style={{ backgroundColor: "#fff" }}
           />
         ) : (
-          <Typography variant="body1" style={{ padding: "10px 0", fontSize: "1.1rem" }}>{editedQuestion.correctAnswer}</Typography>
+          <Typography variant="body1">{editedQuestion.correctAnswer}</Typography>
         )}
       </Box>
 
-      {editedQuestion.images && (
-        <Box marginBottom="20px">
-          <Typography variant="h6" style={{ color: "#333" }}>Bilder:</Typography>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            {editedQuestion.images.map((image, index) => (
+      {/* Question Images */}
+      <Box marginBottom="20px">
+        <Typography variant="h6" style={{ color: "#333" }}>Bilder:</Typography>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          {(newImages.length > 0 ? newImages : editedQuestion.images || []).map(
+            (image, index) => (
               <img
                 key={index}
                 src={image}
-                alt={`Question ${index}`}  // تم إزالة كلمة "image" من سمة alt
-                style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)" }}
+                alt={`Bild ${index + 1}`}
+                style={{
+                  width: "120px",
+                  height: "120px",
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                  marginBottom: "10px",
+                }}
               />
-            ))}
-          </div>
-        </Box>
-      )}
+            )
+          )}
+        </div>
+        {isEditing && <input type="file" accept="image/*" multiple onChange={handleImageChange} />}
+      </Box>
 
-      {editedQuestion.explanationImages && (
-        <Box marginBottom="20px">
-          <Typography variant="h6" style={{ color: "#333" }}>Förklaringsbilder:</Typography>
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-            {editedQuestion.explanationImages.map((image, index) => (
-              <img
-                key={index}
-                src={image}
-                alt={`Explanation ${index}`}  // تم إزالة كلمة "image" من سمة alt
-                style={{ width: "120px", height: "120px", objectFit: "cover", borderRadius: "8px", boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)" }}
-              />
-            ))}
-          </div>
-        </Box>
-      )}
+      {/* Explanation Images */}
+      <Box marginBottom="20px">
+        <Typography variant="h6" style={{ color: "#333" }}>Förklaringsbilder:</Typography>
+        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          {(newExplanationImages.length > 0
+            ? newExplanationImages
+            : editedQuestion.explanationImages || []).map((image, index) => (
+            <img
+              key={index}
+              src={image}
+              alt={`Förklaringsbild ${index + 1}`}
+              style={{
+                width: "120px",
+                height: "120px",
+                objectFit: "cover",
+                borderRadius: "8px",
+                marginBottom: "10px",
+              }}
+            />
+          ))}
+        </div>
+        {isEditing && <input type="file" accept="image/*" multiple onChange={handleExplanationImageChange} />}
+      </Box>
 
       <Box display="flex" gap="10px">
         <Button
@@ -157,18 +211,15 @@ const QuestionDetails = () => {
           color="primary"
           onClick={handleBackClick}
           startIcon={<ArrowBack />}
-          style={{ backgroundColor: "#1976d2" }}
         >
           Tillbaka
         </Button>
-
         {isEditing ? (
           <Button
             variant="contained"
             color="primary"
             onClick={handleSaveClick}
             startIcon={<Save />}
-            style={{ backgroundColor: "#4caf50" }}
           >
             Spara
           </Button>
@@ -178,41 +229,31 @@ const QuestionDetails = () => {
             color="primary"
             onClick={handleEditClick}
             startIcon={<Edit />}
-            style={{ backgroundColor: "#1976d2" }}
           >
             Redigera
           </Button>
         )}
-
         <Button
           variant="contained"
           color="error"
           onClick={handleDeleteClick}
           startIcon={<Delete />}
-          style={{ backgroundColor: "#f44336" }}
         >
           Ta bort
         </Button>
       </Box>
 
-      {/* Ta bort bekräftelsedialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={handleDeleteCancel}
-        aria-labelledby="delete-dialog-title"
-        aria-describedby="delete-dialog-description"
-      >
-        <DialogTitle id="delete-dialog-title">Bekräftelse på borttagning</DialogTitle>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onClose={handleDeleteCancel}>
+        <DialogTitle>Bekräftelse på borttagning</DialogTitle>
         <DialogContent>
-          <DialogContentText id="delete-dialog-description">
+          <DialogContentText>
             Är du säker på att du vill ta bort denna fråga?
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteCancel} color="primary">
-            Avbryt
-          </Button>
-          <Button onClick={handleDeleteConfirm} color="error" autoFocus>
+          <Button onClick={handleDeleteCancel}>Avbryt</Button>
+          <Button onClick={handleDeleteConfirm} color="error">
             Ta bort
           </Button>
         </DialogActions>

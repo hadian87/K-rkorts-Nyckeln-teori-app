@@ -9,7 +9,6 @@ const ProtectedRoute = ({ children, role }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // الاستماع إلى تغييرات حالة المستخدم
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       console.log("Current user:", user);
       if (user) {
@@ -35,7 +34,6 @@ const ProtectedRoute = ({ children, role }) => {
       setLoading(false);
     });
 
-    // إلغاء الاشتراك في الاستماع عند تدمير المكون
     return () => unsubscribe();
   }, []);
 
@@ -44,8 +42,8 @@ const ProtectedRoute = ({ children, role }) => {
     return <p>Loading...</p>;
   }
 
-  if (!auth.currentUser) {
-    console.log("User is not authenticated, redirecting to login.");
+  if (!userRole) {
+    console.log("User is not authenticated or role is not found, redirecting to login.");
     return <Navigate to="/login" />;
   }
 

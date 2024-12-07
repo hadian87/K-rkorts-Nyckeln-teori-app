@@ -7,9 +7,9 @@ import { getStorage } from "firebase/storage"; // استيراد وحدة الت
 // تهيئة إعدادات Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyAq9O-RUuA1aVEjx6P_sP-lroYv8ClxRSM",
-  authDomain: "korkortsnyckeln-teoriapp.firebaseapp.com",
+  authDomain: "korkortsnyckeln-teoriapp.firebaseapp.com", // تأكد من أن هذه القيمة صحيحة من Firebase Console
   projectId: "korkortsnyckeln-teoriapp",
-  storageBucket: "korkortsnyckeln-teoriapp.firebasestorage.app",
+  storageBucket: "korkortsnyckeln-teoriapp.appspot.com", // تعديل التخزين إلى الصيغة الصحيحة
   messagingSenderId: "475825735988",
   appId: "1:475825735988:web:fcded88bcd6a938346bd61",
   measurementId: "G-YVH89GKSZ8"
@@ -39,4 +39,4 @@ enableIndexedDbPersistence(db) // تفعيل التخزين المؤقت في Fi
   });
 
 // تصدير الخدمات لاستخدامها في أجزاء أخرى من التطبيق
-export { app, auth, db, storage }; 
+export { app, auth, db, storage };

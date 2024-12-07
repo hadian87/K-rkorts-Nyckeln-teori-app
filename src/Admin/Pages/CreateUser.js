@@ -1,180 +1,169 @@
-// CreateUser.js
-
-import React, { useState } from "react";
-import { auth, db } from "../../firebaseConfig";
-import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from "firebase/auth";
-import { doc, setDoc } from "firebase/firestore";
-import Typography from "@mui/material/Typography";
-import TextField from "@mui/material/TextField";
-import Button from "@mui/material/Button";
-import Box from "@mui/material/Box";
-import FormControl from "@mui/material/FormControl";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
-import Grid from "@mui/material/Grid";
-import PersonIcon from "@mui/icons-material/Person";
-import EmailIcon from "@mui/icons-material/Email";
-import PhoneIcon from "@mui/icons-material/Phone";
-import BadgeIcon from "@mui/icons-material/Badge";
-import AssignmentIndIcon from "@mui/icons-material/AssignmentInd";
+import React, { useState } from 'react';
+import axios from 'axios';
+import { db } from '../../firebaseConfig';
+import { setDoc, doc } from 'firebase/firestore';
+import { Box, TextField, Button, Typography, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
 function CreateUser() {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [idNumber, setIdNumber] = useState("");
-  const [role, setRole] = useState("student");
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState('student');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [personNumber, setPersonNumber] = useState('');
 
-  // Dator för att generera ett slumpmässigt lösenord
-  const generatePassword = () => Math.random().toString(36).slice(-8);
+  // دالة لتوليد كلمة مرور عشوائية
+  const generatePassword = () => {
+    return Math.random().toString(36).slice(-8);
+  };
 
   const handleAddUser = async () => {
-    if (!firstName || !lastName || !email || !phoneNumber || !idNumber) {
-      alert("Vänligen fyll i alla fält.");
+    if (!firstName || !lastName || !email || !phoneNumber || !personNumber) {
+      alert('Vänligen fyll i alla fält.');
       return;
     }
 
-    if (idNumber.length !== 12) {
-      alert("ID-nummer måste vara 12 siffror.");
+    // التحقق من رقم الهاتف (يجب أن يتكون من 9 خانات ويبدأ بالرقم 7)
+    const phoneRegex = /^7\d{8}$/;
+    if (!phoneRegex.test(phoneNumber)) {
+      alert('Telefonnummer måste bestå av 9 siffror och börja med 7.');
       return;
     }
 
-    if (!/^\d{9}$/.test(phoneNumber)) {
-      alert("Telefonnummer måste vara 9 siffror utan ledande nolla och med landskod +46.");
+    // التحقق من رقم الهوية (يجب أن يتكون من 12 خانة)
+    if (personNumber.length !== 12) {
+      alert('Personnummer måste bestå av exakt 12 siffror.');
       return;
     }
 
     try {
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      if (signInMethods.length > 0) {
-        alert("Den här e-postadressen används redan. Vänligen använd en annan e-postadress.");
-        return;
-      }
-
-      // Generera ett slumpmässigt lösenord för användaren
+      // توليد كلمة مرور عشوائية
       const password = generatePassword();
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
 
-      // Spara användardata i Firestore
-      await setDoc(doc(db, "users", user.uid), {
-        uid: user.uid,
+      // إعداد بيانات المستخدم الجديد
+      const newUser = {
+        email: email,
+        password: password,
+        returnSecureToken: true,
+      };
+
+      // استخدام REST API لإنشاء المستخدم الجديد
+      const apiKey = 'AIzaSyAq9O-RUuA1aVEjx6P_sP-lroYv8ClxRSM';
+      const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`;
+
+      const response = await axios.post(url, newUser);
+      const userId = response.data.localId;
+
+      // حفظ بيانات المستخدم في Firestore
+      await setDoc(doc(db, 'users', userId), {
+        uid: userId,
         firstName,
         lastName,
-        email: user.email,
-        phoneNumber: `+46${phoneNumber}`,
-        idNumber,
+        email,
         role,
-        password, // Lagra lösenordet
+        phoneNumber,
+        personNumber,
+        password,
         createdAt: new Date().toISOString(),
       });
 
-      // Visa lösenordet för användaren
       alert(`Användarkonto har skapats framgångsrikt!\nLösenord: ${password}`);
-      setFirstName("");
-      setLastName("");
-      setEmail("");
-      setPhoneNumber("");
-      setIdNumber("");
-      setRole("student");
+
+      // إعادة تعيين الحقول
+      setFirstName('');
+      setLastName('');
+      setEmail('');
+      setRole('student');
+      setPhoneNumber('');
+      setPersonNumber('');
     } catch (error) {
-      alert("Misslyckades med att lägga till användare: " + error.message);
+      if (error.response) {
+        // تفاصيل الخطأ من الاستجابة
+        alert(`Misslyckades med att skapa användare: ${error.response.data.error.message}`);
+      } else if (error.request) {
+        // لم يتم استلام استجابة
+        alert('Misslyckades med att skapa användare: Inget svar från servern');
+      } else {
+        // خطأ في إعداد الطلب
+        alert(`Misslyckades med att skapa användare: ${error.message}`);
+      }
     }
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", marginTop: 5, width: "90%" }}>
-      <Typography variant="h5" gutterBottom sx={{ fontWeight: "bold" }}>
-        Lägg till användare
+    <Box sx={{ width: '100%', padding: 4, maxWidth: 600, margin: 'auto', backgroundColor: '#f7f8fa' }}>
+      <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 3, color: '#333' }} align="center">
+        Skapa Användarkonto
       </Typography>
-      <Grid container spacing={2} sx={{ maxWidth: 800 }}>
-        <Grid item xs={12}>
-          <TextField
-            label="Förnamn"
-            variant="outlined"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            fullWidth
-            InputProps={{ startAdornment: <PersonIcon sx={{ marginRight: 1 }} />, sx: { height: 40 } }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="Efternamn"
-            variant="outlined"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            fullWidth
-            InputProps={{ startAdornment: <PersonIcon sx={{ marginRight: 1 }} />, sx: { height: 40 } }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            type="email"
-            label="E-postadress"
-            variant="outlined"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            fullWidth
-            InputProps={{ startAdornment: <EmailIcon sx={{ marginRight: 1 }} />, sx: { height: 40 } }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            type="tel"
-            label="Telefonnummer (9 siffror utan ledande nolla)"
-            variant="outlined"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            fullWidth
-            inputProps={{ maxLength: 9 }}
-            InputProps={{
-              startAdornment: (
-                <>
-                  <Typography sx={{ marginRight: 1 }}>+46</Typography>
-                  <PhoneIcon sx={{ marginRight: 1 }} />
-                </>
-              ),
-              sx: { height: 40 },
-            }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <TextField
-            label="ID-nummer (12 siffror)"
-            variant="outlined"
-            value={idNumber}
-            onChange={(e) => setIdNumber(e.target.value)}
-            fullWidth
-            inputProps={{ maxLength: 12 }}
-            InputProps={{ startAdornment: <BadgeIcon sx={{ marginRight: 1 }} />, sx: { height: 40 } }}
-          />
-        </Grid>
-        <Grid item xs={12}>
-          <FormControl variant="outlined" fullWidth>
-            <InputLabel id="role-label">Roll</InputLabel>
-            <Select
-              labelId="role-label"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              label="Roll"
-              startAdornment={<AssignmentIndIcon sx={{ marginRight: 1 }} />}
-              sx={{ height: 40 }}
-            >
-              <MenuItem value="student">Student</MenuItem>
-              <MenuItem value="admin">Admin</MenuItem>
-              <MenuItem value="manager">Manager</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12}>
-          <Button variant="contained" onClick={handleAddUser} fullWidth sx={{ height: 40 }}>
-            Skapa användarkonto
-          </Button>
-        </Grid>
-      </Grid>
+      <TextField
+        label="Förnamn"
+        variant="outlined"
+        value={firstName}
+        onChange={(e) => setFirstName(e.target.value)}
+        fullWidth
+        sx={{ mb: 2 }}
+        required
+      />
+      <TextField
+        label="Efternamn"
+        variant="outlined"
+        value={lastName}
+        onChange={(e) => setLastName(e.target.value)}
+        fullWidth
+        sx={{ mb: 2 }}
+        required
+      />
+      <TextField
+        type="email"
+        label="E-postadress"
+        variant="outlined"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        fullWidth
+        sx={{ mb: 2 }}
+        required
+      />
+      <TextField
+        label="Telefonnummer (9 siffror, börjar med 7)"
+        variant="outlined"
+        value={phoneNumber}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value.length <= 9) setPhoneNumber(value);
+        }}
+        placeholder="712345678"
+        fullWidth
+        sx={{ mb: 2 }}
+        required
+      />
+      <TextField
+        label="Personnummer (12 siffror)"
+        variant="outlined"
+        value={personNumber}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value.length <= 12) setPersonNumber(value);
+        }}
+        placeholder="ååååmmddxxxx"
+        fullWidth
+        sx={{ mb: 2 }}
+        required
+      />
+      <FormControl fullWidth sx={{ mb: 2 }}>
+        <InputLabel id="role-label">Roll</InputLabel>
+        <Select
+          labelId="role-label"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          label="Roll"
+        >
+          <MenuItem value="student">Student</MenuItem>
+          <MenuItem value="admin">Admin</MenuItem>
+        </Select>
+      </FormControl>
+      <Button variant="contained" color="primary" onClick={handleAddUser} fullWidth>
+        Skapa Användarkonto
+      </Button>
     </Box>
   );
 }

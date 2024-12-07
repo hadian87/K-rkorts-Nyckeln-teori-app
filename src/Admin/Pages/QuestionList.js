@@ -1,5 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Select, MenuItem, FormControl, InputLabel, Box, Button, Typography, Paper } from "@mui/material";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Box,
+  Button,
+  Typography,
+  Paper,
+} from "@mui/material";
 import { db } from "../../firebaseConfig";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
@@ -93,20 +108,39 @@ const QuestionList = () => {
   };
 
   return (
-    <div style={{ padding: "40px", backgroundColor: "#f9f9f9" }}>
-      <Typography variant="h4" gutterBottom style={{ fontWeight: "bold", color: "#3f51b5", textAlign: "center" }}>
+    <Box
+      sx={{
+        padding: "50px",
+        backgroundColor: "#f1f1f1",
+        minHeight: "100vh",
+        maxWidth: "1200px",
+        margin: "auto",
+        borderRadius: "15px",
+        boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+      }}
+    >
+      <Typography
+        variant="h3"
+        gutterBottom
+        sx={{
+          fontWeight: "bold",
+          color: "#1e88e5",
+          textAlign: "center",
+          marginBottom: "30px",
+          fontSize: "2rem",
+        }}
+      >
         Frågelista
       </Typography>
 
       <Box display="flex" gap="20px" marginBottom="30px" flexWrap="wrap">
-        {/* Main Section Filter */}
-        <FormControl variant="outlined" style={{ minWidth: "200px" }}>
+        <FormControl variant="outlined" sx={{ minWidth: "250px" }}>
           <InputLabel>Huvudsektion</InputLabel>
           <Select
             value={selectedMainSection}
             onChange={(e) => {
               setSelectedMainSection(e.target.value);
-              setSelectedSubSection(""); // Reset sub-section when main section changes
+              setSelectedSubSection("");
             }}
             label="Huvudsektion"
           >
@@ -121,14 +155,13 @@ const QuestionList = () => {
           </Select>
         </FormControl>
 
-        {/* Sub Section Filter */}
-        <FormControl variant="outlined" style={{ minWidth: "200px" }}>
+        <FormControl variant="outlined" sx={{ minWidth: "250px" }}>
           <InputLabel>Undersektion</InputLabel>
           <Select
             value={selectedSubSection}
             onChange={(e) => {
               setSelectedSubSection(e.target.value);
-              setSelectedCategory(""); // Reset category when sub section changes
+              setSelectedCategory("");
             }}
             label="Undersektion"
           >
@@ -145,14 +178,13 @@ const QuestionList = () => {
           </Select>
         </FormControl>
 
-        {/* Category Filter */}
-        <FormControl variant="outlined" style={{ minWidth: "200px" }}>
+        <FormControl variant="outlined" sx={{ minWidth: "250px" }}>
           <InputLabel>Kategori</InputLabel>
           <Select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
             label="Kategori"
-            disabled={!selectedSubSection} // Disable category selection until sub-section is selected
+            disabled={!selectedSubSection}
           >
             <MenuItem value="">
               <em>Alla kategorier</em>
@@ -166,15 +198,15 @@ const QuestionList = () => {
         </FormControl>
       </Box>
 
-      <TableContainer component={Paper} elevation={3} style={{ borderRadius: "10px" }}>
+      <TableContainer component={Paper} sx={{ borderRadius: "10px" }}>
         <Table>
           <TableHead>
-            <TableRow style={{ backgroundColor: "#3f51b5" }}>
-              <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Nr</TableCell>
-              <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Huvudsektion</TableCell>
-              <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Undersektion</TableCell>
-              <TableCell style={{ color: "#fff", fontWeight: "bold" }}>Kategori</TableCell>
-              <TableCell style={{ color: "#fff", fontWeight: "bold", textAlign: "left", paddingLeft: "50px" }}>Fråga</TableCell>
+            <TableRow sx={{ backgroundColor: "#1e88e5" }}>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Nr</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Huvudsektion</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Undersektion</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Kategori</TableCell>
+              <TableCell sx={{ color: "#fff", fontWeight: "bold" }}>Fråga</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -185,8 +217,13 @@ const QuestionList = () => {
                   <TableCell>{getNameFromId(question.mainSection, mainSections)}</TableCell>
                   <TableCell>{getNameFromId(question.subSection, subSections)}</TableCell>
                   <TableCell>{getNameFromId(question.category, categories)}</TableCell>
-                  <TableCell style={{ textAlign: "left", paddingLeft: "50px" }}>
-                    <Button variant="text" color="primary" onClick={() => handleViewQuestionDetails(question)}>
+                  <TableCell>
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      size="small"
+                      onClick={() => handleViewQuestionDetails(question)}
+                    >
                       {question.questionText}
                     </Button>
                   </TableCell>
@@ -194,7 +231,7 @@ const QuestionList = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={5} style={{ textAlign: "center", color: "#999" }}>
+                <TableCell colSpan={5} sx={{ textAlign: "center", color: "#999" }}>
                   Inga frågor tillgängliga
                 </TableCell>
               </TableRow>
@@ -202,7 +239,7 @@ const QuestionList = () => {
           </TableBody>
         </Table>
       </TableContainer>
-    </div>
+    </Box>
   );
 };
 

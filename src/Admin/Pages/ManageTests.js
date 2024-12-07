@@ -213,7 +213,13 @@ const ManageTests = () => {
           onChange: (selectedKeys) => setSelectedRowKeys(selectedKeys),
         }}
       >
-        <Column title="Provnamn" dataIndex="name" key="name" width={150} />
+        <Column 
+          title="Provnamn" 
+          dataIndex="name" 
+          key="name" 
+          width={150} 
+          sorter={(a, b) => a.name.localeCompare(b.name)} 
+        />
         <Column
           title="Huvudsektion"
           key="mainSection"
