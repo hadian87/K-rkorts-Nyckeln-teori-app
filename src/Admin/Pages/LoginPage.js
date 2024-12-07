@@ -3,21 +3,8 @@ import { auth, db } from '../../firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, TextField, Button, Paper, Container, Avatar } from '@mui/material';
+import { Box, Typography, TextField, Button, Paper, Avatar } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
-import { styled } from '@mui/system';
-
-const StyledContainer = styled(Container)(({ theme }) => ({
-  backgroundColor: '#ffffff',
-  minHeight: '100vh',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '0 20px',
-  margin: 0,
-  width: '100%',
-  maxWidth: '100%',
-}));
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -55,7 +42,16 @@ const Login = () => {
   };
 
   return (
-    <StyledContainer component="main">
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        bgcolor: '#f4f6f8',
+        padding: 2,
+      }}
+    >
       <Paper
         elevation={10}
         sx={{
@@ -66,6 +62,7 @@ const Login = () => {
           bgcolor: '#1976d2',
           color: '#fff',
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)',
+          width: '100%', // يضمن ملاءمة الشاشة الصغيرة
         }}
       >
         <Avatar sx={{ m: '0 auto', bgcolor: '#ffffff', color: '#1976d2', width: 56, height: 56 }}>
@@ -167,7 +164,7 @@ const Login = () => {
           </Button>
         </Box>
       </Paper>
-    </StyledContainer>
+    </Box>
   );
 };
 
