@@ -1,0 +1,18 @@
+# تعيين نهايات الأسطر إلى LF لجميع ملفات النصوص
+* text=auto
+
+# تعيين نهايات الأسطر إلى LF للملفات البرمجية
+*.js text eol=lf
+*.jsx text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.json text eol=lf
+
+# تجاهل تحويل نهايات الأسطر للملفات الثنائية
+*.png binary
+*.jpg binary
+*.gif binary
+*.svg binary
+*.ico binary

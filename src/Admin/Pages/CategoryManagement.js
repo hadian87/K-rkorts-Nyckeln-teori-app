@@ -37,6 +37,11 @@ function CategoryManagement() {
   const [selectedSubCategory, setSelectedSubCategory] = useState("");
   const [open, setOpen] = useState({});
 
+  // دالة لتوليد slug من الاسم
+  function generateSlug(name) {
+    return name.trim().toLowerCase().replace(/\s+/g, '-');
+  }
+
   const handleUploadImage = async (file) => {
     if (!file) return null;
     const storage = getStorage();
@@ -86,8 +91,9 @@ function CategoryManagement() {
     if (mainCategoryInput) {
       try {
         const iconUrl = mainCategoryImage ? await handleUploadImage(mainCategoryImage) : null;
-        const docRef = await addDoc(collection(db, "mainCategories"), { name: mainCategoryInput, iconUrl });
-        setMainCategories([...mainCategories, { id: docRef.id, name: mainCategoryInput, iconUrl }]);
+        const slug = generateSlug(mainCategoryInput); // إنشاء slug
+        const docRef = await addDoc(collection(db, "mainCategories"), { name: mainCategoryInput, iconUrl, slug });
+        setMainCategories([...mainCategories, { id: docRef.id, name: mainCategoryInput, iconUrl, slug }]);
         setMainCategoryInput("");
         setMainCategoryImage(null);
       } catch (error) {
@@ -100,14 +106,16 @@ function CategoryManagement() {
     if (subCategoryInput && selectedMainCategory) {
       try {
         const iconUrl = subCategoryImage ? await handleUploadImage(subCategoryImage) : null;
+        const slug = generateSlug(subCategoryInput); // إنشاء slug
         const docRef = await addDoc(collection(db, "subCategories"), {
           name: subCategoryInput,
           mainCategory: selectedMainCategory,
           iconUrl,
+          slug,
         });
         const updatedSubCategories = { ...subCategories };
         if (!updatedSubCategories[selectedMainCategory]) updatedSubCategories[selectedMainCategory] = [];
-        updatedSubCategories[selectedMainCategory].push({ id: docRef.id, name: subCategoryInput, iconUrl });
+        updatedSubCategories[selectedMainCategory].push({ id: docRef.id, name: subCategoryInput, iconUrl, slug });
         setSubCategories(updatedSubCategories);
         setSubCategoryInput("");
         setSubCategoryImage(null);
@@ -121,14 +129,16 @@ function CategoryManagement() {
     if (categoryInput && selectedMainCategory && selectedSubCategory) {
       try {
         const iconUrl = categoryImage ? await handleUploadImage(categoryImage) : null;
+        const slug = generateSlug(categoryInput); // إنشاء slug
         const docRef = await addDoc(collection(db, "categories"), {
           name: categoryInput,
           subCategory: selectedSubCategory,
           iconUrl,
+          slug,
         });
         const updatedCategories = { ...categories };
         if (!updatedCategories[selectedSubCategory]) updatedCategories[selectedSubCategory] = [];
-        updatedCategories[selectedSubCategory].push({ id: docRef.id, name: categoryInput, iconUrl });
+        updatedCategories[selectedSubCategory].push({ id: docRef.id, name: categoryInput, iconUrl, slug });
         setCategories(updatedCategories);
         setCategoryInput("");
         setCategoryImage(null);

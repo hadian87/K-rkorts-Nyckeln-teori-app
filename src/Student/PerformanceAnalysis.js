@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Typography, Spin, Card, Row, Col, message, Empty, Progress, Button } from 'antd';
+import { Layout, Typography, Spin, Card, Row, Col, message, Empty, Progress, Button, Tooltip } from 'antd';
 import { db } from '../firebaseConfig';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { Link, useNavigate } from 'react-router-dom';
 import { Bar } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title as ChartTitle, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title as ChartTitle, Tooltip as ChartTooltip, Legend } from 'chart.js';
 import { Divider } from 'antd';
-import { ArrowLeftOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, LineChartOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTitle, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, ChartTitle, ChartTooltip, Legend);
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
@@ -44,7 +44,7 @@ const PerformanceAnalysis = () => {
             for (const docSnapshot of querySnapshot.docs) {
               const data = docSnapshot.data();
 
-              // Fetch main category name
+              // Hämta huvudkategorinamnet
               let mainCategoryName = '';
               if (data.mainCategoryName) {
                 const mainCategoryRef = doc(db, 'mainCategories', data.mainCategoryName);
@@ -56,7 +56,7 @@ const PerformanceAnalysis = () => {
                 }
               }
 
-              // Fetch sub category name
+              // Hämta underkategorinamnet
               let subCategoryName = '';
               if (data.categoryName) {
                 const subCategoryRef = doc(db, 'subCategories', data.categoryName);
@@ -119,8 +119,8 @@ const PerformanceAnalysis = () => {
 
   if (loading) {
     return (
-      <Layout style={{ minHeight: '100vh', background: '#f0f2f5', padding: '24px' }}>
-        <Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+      <Layout style={styles.layout}>
+        <Content style={styles.content}>
           <Spin size="large" />
         </Content>
       </Layout>
@@ -128,57 +128,189 @@ const PerformanceAnalysis = () => {
   }
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f0f2f5', padding: '24px' }}>
-      <Content style={{ maxWidth: '1200px', margin: 'auto', padding: '24px', background: '#ffffff', borderRadius: '15px', boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)' }}>
-        <Button type="link" icon={<ArrowLeftOutlined />} onClick={() => navigate('/student/övningstest')} style={{ marginBottom: '16px' }}>
+    <Layout style={styles.layout}>
+      <Content style={styles.content}>
+        <Button
+          type="link"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => navigate('/student/övningstest')}
+          style={styles.backButton}
+        >
           Tillbaka
         </Button>
 
-        <Title level={2} style={{ color: '#003a8c', textAlign: 'center', marginBottom: '24px' }}>
+        <Title level={2} style={styles.title}>
           Prestationsanalys
         </Title>
 
         {testResults.length > 0 ? (
           <>
-            <Row gutter={[16, 16]}>
+            <Row gutter={[24, 24]}>
               <Col xs={24} md={12}>
-                <Card bordered={false} style={{ textAlign: 'center', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-                  <Title level={3}>Genomsnittligt resultat</Title>
-                  <Text>{averageScore.toFixed(2)}%</Text>
+                <Card style={styles.card} bordered={false}>
+                  <Row align="middle">
+                    <Col span={6}>
+                      <Tooltip title="Genomsnittligt resultat">
+                        <LineChartOutlined style={styles.icon} />
+                      </Tooltip>
+                    </Col>
+                    <Col span={18}>
+                      <Title level={4} style={styles.cardTitle}>
+                        Genomsnittligt resultat
+                      </Title>
+                      <Text style={styles.cardText}>{averageScore.toFixed(2)}%</Text>
+                    </Col>
+                  </Row>
                 </Card>
               </Col>
               <Col xs={24} md={12}>
-                <Card bordered={false} style={{ textAlign: 'center', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-                  <Title level={3}>Andel godkända tester</Title>
-                  <Progress type="circle" percent={passPercentage.toFixed(2)} />
+                <Card style={styles.card} bordered={false}>
+                  <Row align="middle">
+                    <Col span={6}>
+                      <Tooltip title="Andel godkända tester">
+                        <CheckCircleOutlined style={styles.icon} />
+                      </Tooltip>
+                    </Col>
+                    <Col span={18}>
+                      <Title level={4} style={styles.cardTitle}>
+                        Andel godkända tester
+                      </Title>
+                      <Progress type="circle" percent={passPercentage.toFixed(2)} />
+                    </Col>
+                  </Row>
                 </Card>
               </Col>
             </Row>
 
-            <Divider />
+            <Divider style={styles.divider} />
 
-            <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+            <Row gutter={[24, 24]} style={{ marginBottom: '24px' }}>
               <Col span={24}>
-                <Card bordered={false} style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
-                  <Title level={3} style={{ textAlign: 'center' }}>Analys av svar</Title>
-                  {chartData && <Bar data={chartData} options={{ responsive: true, plugins: { legend: { position: 'top' } } }} />}
+                <Card style={styles.chartCard} bordered={false}>
+                  <Title level={3} style={styles.chartTitle}>
+                    Analys av svar
+                  </Title>
+                  {chartData && (
+                    <Bar
+                      data={chartData}
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: {
+                            position: 'top',
+                            labels: {
+                              color: '#555555',
+                            },
+                          },
+                          title: {
+                            display: false,
+                          },
+                        },
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            ticks: {
+                              color: '#555555',
+                            },
+                          },
+                          x: {
+                            ticks: {
+                              color: '#555555',
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  )}
                 </Card>
               </Col>
             </Row>
 
-            <Title level={3} style={{ marginBottom: '16px' }}>Detaljerad resultatlista</Title>
-            <Row gutter={[16, 16]}>
+            <Title level={3} style={styles.detailsTitle}>
+              Detaljerad resultatlista
+            </Title>
+            <Row gutter={[24, 24]}>
               {testResults.map((item) => (
                 <Col xs={24} md={12} key={item.id}>
-                  <Card bordered={false} style={{ boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', borderRadius: '10px' }}>
-                    <Title level={4} style={{ color: '#003a8c' }}>{item.testName}</Title>
-                    <Text><strong>Huvudkategori:</strong> {item.mainCategoryName}</Text><br />
-                    <Text><strong>Underkategori:</strong> {item.subCategoryName}</Text><br />
-                    <Text><strong>Antal frågor:</strong> {item.questions.length}</Text><br />
-                    <Text><strong>Rätta svar:</strong> {item.correctAnswers}</Text><br />
-                    <Text><strong>Felaktiga svar:</strong> {item.questions.length - item.correctAnswers}</Text><br />
-                    <Text><strong>Resultat:</strong> {item.resultPercentage}%</Text><br />
-                    <Link to={`/student/test-review/${item.id}`} style={{ color: '#1890ff', marginTop: '10px', display: 'inline-block' }}>Visa detaljer</Link>
+                  <Card style={styles.detailCard} bordered={false}>
+                    <Title level={4} style={styles.detailTitle}>
+                      {item.testName}
+                    </Title>
+                    <Row gutter={[8, 8]} style={styles.detailRow}>
+                      <Col span={6}>
+                        <Tooltip title="Huvudkategori">
+                          <LineChartOutlined style={styles.detailIcon} />
+                        </Tooltip>
+                      </Col>
+                      <Col span={18}>
+                        <Text style={styles.detailText}>
+                          <strong>Huvudkategori:</strong> {item.mainCategoryName}
+                        </Text>
+                      </Col>
+                    </Row>
+                    <Row gutter={[8, 8]} style={styles.detailRow}>
+                      <Col span={6}>
+                        <Tooltip title="Underkategori">
+                          <LineChartOutlined style={styles.detailIcon} />
+                        </Tooltip>
+                      </Col>
+                      <Col span={18}>
+                        <Text style={styles.detailText}>
+                          <strong>Underkategori:</strong> {item.subCategoryName}
+                        </Text>
+                      </Col>
+                    </Row>
+                    <Row gutter={[8, 8]} style={styles.detailRow}>
+                      <Col span={6}>
+                        <Tooltip title="Antal frågor">
+                          <LineChartOutlined style={styles.detailIcon} />
+                        </Tooltip>
+                      </Col>
+                      <Col span={18}>
+                        <Text style={styles.detailText}>
+                          <strong>Antal frågor:</strong> {item.questions.length}
+                        </Text>
+                      </Col>
+                    </Row>
+                    <Row gutter={[8, 8]} style={styles.detailRow}>
+                      <Col span={6}>
+                        <Tooltip title="Rätta svar">
+                          <CheckCircleOutlined style={styles.detailIcon} />
+                        </Tooltip>
+                      </Col>
+                      <Col span={18}>
+                        <Text style={styles.detailText}>
+                          <strong>Rätta svar:</strong> {item.correctAnswers}
+                        </Text>
+                      </Col>
+                    </Row>
+                    <Row gutter={[8, 8]} style={styles.detailRow}>
+                      <Col span={6}>
+                        <Tooltip title="Felaktiga svar">
+                          <CloseCircleOutlined style={styles.detailIcon} />
+                        </Tooltip>
+                      </Col>
+                      <Col span={18}>
+                        <Text style={styles.detailText}>
+                          <strong>Felaktiga svar:</strong> {item.questions.length - item.correctAnswers}
+                        </Text>
+                      </Col>
+                    </Row>
+                    <Row gutter={[8, 8]} style={styles.detailRow}>
+                      <Col span={6}>
+                        <Tooltip title="Nödvändig procent">
+                          <LineChartOutlined style={styles.detailIcon} />
+                        </Tooltip>
+                      </Col>
+                      <Col span={18}>
+                        <Text style={styles.detailText}>
+                          <strong>Resultat:</strong> {item.resultPercentage}%
+                        </Text>
+                      </Col>
+                    </Row>
+                    <Link to={`/student/test-review/${item.id}`} style={styles.detailLink}>
+                      Visa detaljer
+                    </Link>
                   </Card>
                 </Col>
               ))}
@@ -190,6 +322,95 @@ const PerformanceAnalysis = () => {
       </Content>
     </Layout>
   );
+};
+
+const styles = {
+  layout: {
+    minHeight: '100vh',
+    background: '#f0f2f5',
+    padding: '24px',
+  },
+  content: {
+    maxWidth: '1200px',
+    margin: 'auto',
+    padding: '24px',
+  },
+  backButton: {
+    marginBottom: '16px',
+    fontSize: '16px',
+    color: '#1890ff',
+  },
+  title: {
+    color: '#003a8c',
+    textAlign: 'center',
+    marginBottom: '24px',
+  },
+  card: {
+    backgroundColor: '#ffffff',
+    borderRadius: '15px',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+    padding: '20px',
+    transition: 'transform 0.3s',
+  },
+  icon: {
+    fontSize: '32px',
+    color: '#1890ff',
+  },
+  cardTitle: {
+    marginBottom: '12px',
+    color: '#003a8c',
+  },
+  cardText: {
+    fontSize: '24px',
+    color: '#555555',
+  },
+  divider: {
+    margin: '40px 0',
+  },
+  chartCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '15px',
+    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+    padding: '24px',
+  },
+  chartTitle: {
+    textAlign: 'center',
+    marginBottom: '24px',
+    color: '#003a8c',
+  },
+  detailsTitle: {
+    marginBottom: '16px',
+    color: '#003a8c',
+  },
+  detailCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: '10px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+    padding: '16px',
+    transition: 'transform 0.3s',
+  },
+  detailTitle: {
+    color: '#003a8c',
+    marginBottom: '12px',
+  },
+  detailRow: {
+    display: 'flex',
+    alignItems: 'center',
+    marginBottom: '8px',
+  },
+  detailIcon: {
+    fontSize: '20px',
+    color: '#1890ff',
+  },
+  detailText: {
+    fontSize: '16px',
+    color: '#555555',
+  },
+  detailLink: {
+    color: '#1890ff',
+    marginTop: '10px',
+    display: 'inline-block',
+  },
 };
 
 export default PerformanceAnalysis;
