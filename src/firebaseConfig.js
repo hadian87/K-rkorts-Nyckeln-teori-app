@@ -9,7 +9,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyAq9O-RUuA1aVEjx6P_sP-lroYv8ClxRSM",
   authDomain: "korkortsnyckeln-teoriapp.firebaseapp.com", // تأكد من أن هذه القيمة صحيحة من Firebase Console
   projectId: "korkortsnyckeln-teoriapp",
-  storageBucket: "korkortsnyckeln-teoriapp.appspot.com", // تعديل التخزين إلى الصيغة الصحيحة
+  storageBucket: "korkortsnyckeln-teoriapp.firebasestorage.app", // تعديل التخزين إلى الصيغة الصحيحة
   messagingSenderId: "475825735988",
   appId: "1:475825735988:web:fcded88bcd6a938346bd61",
   measurementId: "G-YVH89GKSZ8"

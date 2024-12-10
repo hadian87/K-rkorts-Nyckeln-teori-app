@@ -16,7 +16,7 @@ import {
   Paper,
 } from "@mui/material";
 import { db } from "../../firebaseConfig";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 
 const QuestionList = () => {
@@ -54,7 +54,10 @@ const QuestionList = () => {
   };
 
   const fetchMainSections = async () => {
-    const mainSectionsCollection = collection(db, "mainCategories");
+    const mainSectionsCollection = query(
+      collection(db, "mainCategories"),
+      orderBy("name", "asc")
+    );
     const mainSectionsSnapshot = await getDocs(mainSectionsCollection);
     const mainSectionsList = mainSectionsSnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -62,9 +65,12 @@ const QuestionList = () => {
     }));
     setMainSections(mainSectionsList);
   };
-
+  
   const fetchSubSections = async () => {
-    const subSectionsCollection = collection(db, "subCategories");
+    const subSectionsCollection = query(
+      collection(db, "subCategories"),
+      orderBy("name", "asc")
+    );
     const subSectionsSnapshot = await getDocs(subSectionsCollection);
     const subSectionsList = subSectionsSnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -73,17 +79,21 @@ const QuestionList = () => {
     }));
     setSubSections(subSectionsList);
   };
-
+  
   const fetchCategories = async (subSectionId) => {
-    const categoriesCollection = collection(db, "categories");
-    const q = query(categoriesCollection, where("subCategory", "==", subSectionId));
-    const categoriesSnapshot = await getDocs(q);
+    const categoriesCollection = query(
+      collection(db, "categories"),
+      where("subCategory", "==", subSectionId),
+      orderBy("name", "asc")
+    );
+    const categoriesSnapshot = await getDocs(categoriesCollection);
     const categoriesList = categoriesSnapshot.docs.map((doc) => ({
       id: doc.id,
       name: doc.data().name,
     }));
     setCategories(categoriesList);
   };
+  
 
   const filteredQuestions = questions.filter((question) => {
     if (selectedCategory && question.category !== selectedCategory) {

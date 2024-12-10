@@ -3,7 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { Button, Card, Col, Row, Typography, Layout, Spin, message } from 'antd';
-import { ClockCircleOutlined, QuestionCircleOutlined, CheckCircleOutlined, TrophyOutlined } from '@ant-design/icons';
+import {
+  ClockCircleOutlined,
+  QuestionCircleOutlined,
+  CheckCircleOutlined,
+  TrophyOutlined,
+} from '@ant-design/icons';
 import styled from 'styled-components';
 import Navbar from './Navbar'; // Include common navbar
 
@@ -14,11 +19,62 @@ const { Content } = Layout;
 const StyledCard = styled(Card)`
   border-radius: 15px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background: #ffffff;
+  background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   &:hover {
     transform: translateY(-10px);
-    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
   }
+`;
+
+const StartButton = styled(Button)`
+  width: 100%;
+  border-radius: 8px;
+  background-color: #1890ff;
+  border-color: #1890ff;
+  &:hover {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+  &:focus {
+    background-color: #40a9ff;
+    border-color: #40a9ff;
+  }
+`;
+
+// Background for the page
+const PageBackground = styled.div`
+  background: linear-gradient(135deg, #e6f7ff, #ffffff);
+  min-height: 100vh;
+`;
+
+// Container for the content
+const ContentContainer = styled(Content)`
+  padding: 40px;
+  background: #ffffff;
+  margin: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+`;
+
+// Header Title
+const HeaderTitle = styled(Title)`
+  color: #1890ff;
+  text-align: center;
+  margin-bottom: 40px;
+`;
+
+// Loading Spinner Container
+const SpinnerContainer = styled.div`
+  text-align: center;
+  padding: 50px;
+`;
+
+// No Tests Message
+const NoTestsMessage = styled(Text)`
+  text-align: center;
+  color: #555;
+  font-size: 18px;
 `;
 
 const TestsPage = () => {
@@ -98,76 +154,82 @@ const TestsPage = () => {
   };
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      {/* Common navbar */}
-      <Navbar />
+    <PageBackground>
+      <Layout style={{ minHeight: '100vh' }}>
+        {/* Common navbar */}
+        <Navbar />
 
-      {/* Test page content */}
-      <Layout style={{ padding: '24px' }}>
-        <Content
-          style={{
-            padding: '40px',
-            background: '#f0f2f5',
-            margin: '32px',
-            borderRadius: '16px',
-            boxShadow: '0 8px 16px rgba(0, 0, 0, 0.15)',
-          }}
-        >
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: '50px' }}>
-              <Spin size="large" />
-            </div>
-          ) : (
-            <Row gutter={[24, 24]} justify="center">
-              {tests.length > 0 ? (
-                tests.map((test) => (
-                  <Col key={test.id} xs={24} sm={24} md={12} lg={8}>
-                    <StyledCard
-                      title={<Title level={4} style={{ color: '#003a8c', fontWeight: 'bold' }}>{test.name}</Title>}
-                      bordered={false}
-                      style={{
-                        background: '#ffffff',
-                        position: 'relative',
-                        boxShadow: '0 12px 20px rgba(0, 0, 0, 0.1)',
-                      }}
-                      hoverable
-                    >
-                      <Text style={{ display: 'block', marginBottom: '10px', color: '#555' }}>
-                        <ClockCircleOutlined /> Varaktighet: {test.duration} minuter
-                      </Text>
-                      <Text style={{ display: 'block', marginBottom: '10px', color: '#555' }}>
-                        <QuestionCircleOutlined /> Frågor: {test.totalQuestions}
-                      </Text>
-                      <Text style={{ display: 'block', marginBottom: '15px', color: '#555' }}>
-                        <CheckCircleOutlined /> Godkänd poäng: {test.passingScore}%
-                      </Text>
-                      <Button
-                        type="primary"
-                        icon={<TrophyOutlined />}
-                        size="large"
-                        style={{
-                          width: '100%',
-                          borderRadius: '8px',
-                          backgroundColor: '#003a8c',
-                          borderColor: '#003a8c',
-                        }}
-                        onClick={() => handleStartTest(test.id)}
+        {/* Test page content */}
+        <Layout>
+          <ContentContainer>
+            <HeaderTitle level={2}>Översikt över Tester</HeaderTitle>
+            {loading ? (
+              <SpinnerContainer>
+                <Spin size="large" tip="Laddar tester..." />
+              </SpinnerContainer>
+            ) : (
+              <Row gutter={[24, 24]} justify="center">
+                {tests.length > 0 ? (
+                  tests.map((test) => (
+                    <Col key={test.id} xs={24} sm={24} md={12} lg={8}>
+                      <StyledCard
+                        hoverable
+                        cover={
+                          test.iconUrl ? (
+                            <img
+                              alt={`${test.name} ikon`}
+                              src={test.iconUrl}
+                              style={{ height: '200px', objectFit: 'cover', borderTopLeftRadius: '15px', borderTopRightRadius: '15px' }}
+                            />
+                          ) : (
+                            <div style={{ height: '200px', background: '#f0f4f8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <TrophyOutlined style={{ fontSize: '48px', color: '#1890ff' }} />
+                            </div>
+                          )
+                        }
                       >
-                        Starta nu
-                      </Button>
-                    </StyledCard>
-                  </Col>
-                ))
-              ) : (
-                <Text style={{ textAlign: 'center', color: '#555', fontSize: '18px' }}>
-                  Inga tester finns för den valda kategorin.
-                </Text>
-              )}
-            </Row>
-          )}
-        </Content>
+                        <Title level={4} style={{ color: '#1890ff' }}>
+                          {test.name}
+                        </Title>
+                        <Row gutter={[8, 8]}>
+                          <Col span={24}>
+                            <Text>
+                              <ClockCircleOutlined style={{ color: '#1890ff', marginRight: '4px' }} />
+                              Varaktighet: {test.duration} minuter
+                            </Text>
+                          </Col>
+                          <Col span={24}>
+                            <Text>
+                              <QuestionCircleOutlined style={{ color: '#1890ff', marginRight: '4px' }} />
+                              Frågor: {test.totalQuestions}
+                            </Text>
+                          </Col>
+                          <Col span={24}>
+                            <Text>
+                              <CheckCircleOutlined style={{ color: '#1890ff', marginRight: '4px' }} />
+                              Godkänd poäng: {test.passingScore}%
+                            </Text>
+                          </Col>
+                        </Row>
+                        <StartButton
+                          type="primary"
+                          icon={<TrophyOutlined />}
+                          onClick={() => handleStartTest(test.id)}
+                        >
+                          Starta nu
+                        </StartButton>
+                      </StyledCard>
+                    </Col>
+                  ))
+                ) : (
+                  <NoTestsMessage>Inga tester finns för den valda kategorin.</NoTestsMessage>
+                )}
+              </Row>
+            )}
+          </ContentContainer>
+        </Layout>
       </Layout>
-    </Layout>
+    </PageBackground>
   );
 };
 

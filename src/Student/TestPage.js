@@ -1,14 +1,171 @@
+// TestPage.js
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { db } from '../firebaseConfig';
 import { doc, collection, query, where, getDoc, getDocs, addDoc } from 'firebase/firestore';
-import { Button, Card, Typography, Layout, Progress, Divider, Modal, message, Spin } from 'antd';
-import { StarOutlined, StarFilled, ExclamationCircleOutlined } from '@ant-design/icons';
+import { Button, Card, Typography, Layout, Progress, Divider, Modal, message, Spin, Tooltip, Alert } from 'antd';
+import {
+  StarOutlined,
+  StarFilled,
+  ExclamationCircleOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  FileImageOutlined,
+  ArrowLeftOutlined,
+  ArrowRightOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons';
 import { getAuth } from 'firebase/auth';
+import styled, { createGlobalStyle } from 'styled-components';
+import Navbar from './Navbar';
 
 const { Title, Text } = Typography;
 const { Content } = Layout;
 const { confirm } = Modal;
+
+// Global Styles
+const GlobalStyle = createGlobalStyle`
+  body {
+    font-family: 'Roboto', sans-serif;
+    background: linear-gradient(135deg, #e6f7ff, #ffffff);
+    margin: 0;
+    padding: 0;
+  }
+`;
+
+// Styled Components for Custom Styling
+const StyledLayout = styled(Layout)`
+  min-height: 100vh;
+`;
+
+const ContentContainer = styled(Content)`
+  padding: 40px;
+  background: #ffffff;
+  margin: 32px;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+`;
+
+const HeaderTitle = styled(Title)`
+  color: #1890ff;
+  text-align: center;
+  margin-bottom: 40px;
+  font-family: 'Roboto', sans-serif;
+`;
+
+const SpinnerContainer = styled.div`
+  text-align: center;
+  padding: 50px;
+`;
+
+const NoTestsMessage = styled(Text)`
+  text-align: center;
+  color: #555;
+  font-size: 18px;
+`;
+
+// StyledCard remains unchanged
+const StyledCard = styled(Card)`
+  border-radius: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: linear-gradient(135deg, #f0f4f8, #d9e2ec);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+// Components for displaying test info
+const TimeText = styled(Text)`
+  font-size: 16px;
+  color: #1890ff;
+  display: flex;
+  align-items: center;
+`;
+
+const PassingScoreText = styled(Text)`
+  font-size: 16px;
+  color: #1890ff;
+  display: flex;
+  align-items: center;
+`;
+
+const QuestionCounterText = styled(Text)`
+  font-size: 16px;
+  color: #1890ff;
+  display: flex;
+  align-items: center;
+`;
+
+// Mark Button remains unchanged
+const MarkButton = styled(Button)`
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 24px;
+  color: #0050b3;
+`;
+
+// **مكون زر الإجابة (Answer Button) المعدل**
+const AnswerButton = styled(Button)`
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  text-align: left;
+  margin-top: 10px;
+  padding: 15px;
+  background-color: ${({ isAnswered, isCorrect, isSelected }) => {
+    if (isAnswered) {
+      if (isSelected && isCorrect) return '#52c41a'; // أخضر للإجابة الصحيحة المختارة
+      if (isSelected && !isCorrect) return '#f5222d'; // أحمر للإجابة الخاطئة المختارة
+      if (isCorrect) return '#52c41a'; // أخضر للإجابة الصحيحة غير المختارة
+    }
+    return '#fff'; // الأبيض لباقي الإجابات
+  }};
+  color: ${({ isAnswered, isSelected }) => {
+    if (isAnswered) {
+      if (isSelected) return '#fff'; // النص أبيض للإجابات المختارة
+      return '#fff'; // النص أبيض للإجابة الصحيحة غير المختارة
+    }
+    return '#003a8c'; // النص الأزرق للخيارات الافتراضية
+  }};
+  border: 2px solid #d9d9d9;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  padding-left: 40px;
+  position: relative;
+
+  &:hover {
+    border-color: #40a9ff;
+  }
+`;
+
+// مكون لعرض الصور في نافذة منبثقة
+const ImageModal = styled.img`
+  width: 100%;
+  max-height: 80vh;
+  object-fit: contain;
+  border-radius: 8px;
+`;
+
+// مكون لعرض نص الشرح
+const ExplanationText = styled(Text)`
+  font-size: 16px;
+  color: #555;
+`;
+
+// مكون لعرض صور الشرح
+const ExplanationImage = styled.img`
+  width: 100%;
+  max-width: 250px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  margin-top: 15px;
+`;
 
 const TestPage = () => {
   const { testId } = useParams();
@@ -20,21 +177,22 @@ const TestPage = () => {
   const [selectedAnswer, setSelectedAnswer] = useState({});
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(null); // إعادة تعريف الوقت المتبقي
-  const timerRef = useRef(null); // إعادة تعريف المرجع للمؤقت
+  const [timeLeft, setTimeLeft] = useState(null); // Time left in seconds
+  const timerRef = useRef(null); // Timer reference
   const [markedQuestions, setMarkedQuestions] = useState([]);
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [modalImage, setModalImage] = useState(null);
   const [isExplanationVisible, setIsExplanationVisible] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  // مصفوفة الأحرف للاختيارات A,B,C,D,E
+  // Array of option letters A, B, C, D, E
   const optionLetters = ['A', 'B', 'C', 'D', 'E'];
 
-  // دالة إنهاء الاختبار
+  // Function to finish the test
   const handleFinishTest = useCallback(async () => {
     try {
-      const auth = getAuth();
-      const currentUser = auth.currentUser;
+      const authInstance = getAuth(); // استخدام getAuth بشكل صحيح
+      const currentUser = authInstance.currentUser;
 
       if (currentUser) {
         const testResultsRef = collection(db, 'testResults');
@@ -82,7 +240,7 @@ const TestPage = () => {
     });
   }, [correctAnswers, questions, selectedAnswer, testSettings, navigate]);
 
-  // دالة جلب بيانات الاختبار
+  // Function to fetch test data
   const fetchTestData = useCallback(async () => {
     try {
       const testRef = doc(db, 'tests', testId);
@@ -91,7 +249,7 @@ const TestPage = () => {
         const data = testSnapshot.data();
         setTestSettings(data);
 
-        setTimeLeft(data.duration * 60); // ضبط الوقت المتبقي بناءً على إعدادات الاختبار
+        setTimeLeft(data.duration * 60); // Set time left based on test settings
 
         const questionsRef = collection(db, 'questions');
         const q = query(
@@ -123,7 +281,7 @@ const TestPage = () => {
     fetchTestData();
   }, [fetchTestData]);
 
-  // إعداد المؤقت
+  // Setup timer
   useEffect(() => {
     if (timeLeft !== null && timerRef.current === null) {
       timerRef.current = setInterval(() => {
@@ -191,7 +349,7 @@ const TestPage = () => {
       okType: 'danger',
       cancelText: 'Nej, stanna',
       onOk() {
-        // قم بتنظيف المؤقت إذا كان يعمل
+        // Clean up timer if running
         if (timerRef.current) {
           clearInterval(timerRef.current);
           timerRef.current = null;
@@ -221,174 +379,242 @@ const TestPage = () => {
     setIsExplanationVisible(false);
   };
 
+  // Function to close Snackbar
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   if (loading) return (
-    <Layout style={{minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center'}}>
-      <Spin size="large" tip="Laddar test..."/>
-    </Layout>
+    <StyledLayout>
+      <Navbar />
+      <Layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5' }}>
+        <SpinnerContainer>
+          <Spin size="large" tip="Laddar test..." />
+        </SpinnerContainer>
+      </Layout>
+    </StyledLayout>
   );
 
-  if (!testSettings || questions.length === 0) return <p>Inga testinställningar eller frågor hittades.</p>;
+  if (!testSettings || questions.length === 0) return (
+    <StyledLayout>
+      <Navbar />
+      <Layout style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5' }}>
+        <NoTestsMessage>Inga testinställningar eller frågor hittades.</NoTestsMessage>
+      </Layout>
+    </StyledLayout>
+  );
 
   const currentQuestion = questions[currentQuestionIndex];
   const isAnswered = selectedAnswer[currentQuestionIndex] !== undefined;
   const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
 
   return (
-    <Layout style={{ minHeight: '100vh', background: '#f0f2f5', padding: '24px' }}>
-      <Content style={{ background: '#fff', padding: '24px', borderRadius: '10px', boxShadow: '0 6px 20px rgba(0,0,0,0.1)' }}>
-        <Title level={2} style={{ color: '#003a8c', textAlign: 'center', marginBottom: '20px' }}>
-          {testSettings.name}
-        </Title>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          {/* عرض الوقت المتبقي */}
-          <Text style={{ fontSize: '16px', color: '#0050b3' }}>
-            ⏳ Tid kvar: {timeLeft !== null ? Math.floor(timeLeft / 60) : 0}:{timeLeft !== null ? String(timeLeft % 60).padStart(2, '0') : '00'}
-          </Text>
-          <Text style={{ fontSize: '16px', color: '#0050b3' }}>🏆 Godkänd: {testSettings.passingScore}%</Text>
-          <Text style={{ fontSize: '16px', color: '#0050b3' }}>📋 Fråga {currentQuestionIndex + 1} av {questions.length}</Text>
-          <Button type="primary" danger onClick={handleExitTest}>Avsluta test</Button>
-        </div>
+    <>
+      <GlobalStyle />
+      <StyledLayout>
+        <Navbar />
 
-        <Divider />
-
-        <Progress percent={progress} status="active" strokeColor="#1890ff" showInfo={false} />
-
-        {currentQuestion && (
-          <Card style={{ position: 'relative', marginTop: '20px', padding: '20px', borderRadius: '15px', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}>
-            <Button
-              type="text"
-              icon={markedQuestions.includes(currentQuestionIndex) ? <StarFilled style={{ color: '#ffd700' }} /> : <StarOutlined />}
-              onClick={toggleMarkQuestion}
-              style={{ position: 'absolute', top: '15px', right: '15px', fontSize: '24px', color: '#0050b3' }}
-            />
-            <Title level={4} style={{ color: '#003a8c' }}>{currentQuestionIndex + 1}. {currentQuestion.questionText}</Title>
-
-            {currentQuestion.images && currentQuestion.images.length > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
-                {currentQuestion.images.map((image, index) => (
-                  <img
-                    key={index}
-                    src={image}
-                    alt={`Fråga ${index + 1}`}
-                    style={{
-                      width: '100%',
-                      maxWidth: '250px',
-                      objectFit: 'contain',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                      cursor: 'pointer',
-                    }}
-                    onClick={() => handleImageClick(image)}
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                ))}
-              </div>
-            )}
-
-            {currentQuestion.options.map((option, idx) => {
-              const letter = optionLetters[idx];
-              const isSelected = selectedAnswer[currentQuestionIndex] === option;
-              const isCorrect = option === currentQuestion.correctAnswer;
-
-              return (
-                <Button
-                  key={idx}
-                  onClick={() => handleAnswerSelection(option)}
-                  disabled={isAnswered}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    width: '100%',
-                    textAlign: 'left',
-                    marginTop: '10px',
-                    padding: '15px',
-                    backgroundColor: isAnswered
-                      ? (isCorrect ? '#4caf50' : (isSelected ? '#f5222d' : '#fff'))
-                      : '#fff',
-                    color: (isAnswered && isSelected) ? '#fff' : '#003a8c',
-                    border: '2px solid #d9d9d9',
-                    borderRadius: '8px',
-                    fontWeight: 'bold',
-                    transition: 'all 0.3s ease',
-                    paddingLeft: '40px',
-                    boxShadow: (isAnswered && isCorrect) ? '0 0 10px rgba(72,201,176,0.6)' : 'none',
-                    position: 'relative'
-                  }}
-                >
-                  <span style={{
-                    fontWeight: 'bold',
-                    color: '#666',
-                    position: 'absolute',
-                    left: '10px'
-                  }}>
-                    {letter}
-                  </span>
-                  {option}
-                  {isAnswered && isSelected && isCorrect && (
-                    <span style={{ marginLeft: '10px', color: 'green' }}>✅</span>
-                  )}
-                  {isAnswered && isSelected && !isCorrect && (
-                    <span style={{ marginLeft: '10px', color: 'white' }}>❌</span>
-                  )}
-                </Button>
-              );
-            })}
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px' }}>
-              <Button onClick={handlePreviousQuestion} disabled={currentQuestionIndex === 0}>Föregående</Button>
-              {currentQuestion.explanation && isAnswered && (
-                <Button type="default" onClick={handleExplanationClick} style={{ backgroundColor: '#ffeb3b' }}>
-                  Förklaring
-                </Button>
-              )}
-              <Button type="primary" onClick={handleNextQuestion}>
-                {currentQuestionIndex === questions.length - 1 ? 'Avsluta' : 'Nästa'}
+        <Layout style={{ padding: '24px', background: '#f0f2f5' }}>
+          <ContentContainer>
+            <HeaderTitle level={2}>{testSettings.name}</HeaderTitle>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
+              {/* Display remaining time */}
+              <TimeText>
+                <ClockCircleOutlined style={{ marginRight: '8px' }} />
+                Tid kvar: {timeLeft !== null ? Math.floor(timeLeft / 60) : 0}:{timeLeft !== null ? String(timeLeft % 60).padStart(2, '0') : '00'}
+              </TimeText>
+              {/* Display passing score */}
+              <PassingScoreText>
+                <CheckCircleOutlined style={{ marginRight: '8px' }} />
+                Godkänd: {testSettings.passingScore}%
+              </PassingScoreText>
+              {/* Display question counter */}
+              <QuestionCounterText>
+                <InfoCircleOutlined style={{ marginRight: '8px' }} />
+                Fråga {currentQuestionIndex + 1} av {questions.length}
+              </QuestionCounterText>
+              {/* Exit Test Button */}
+              <Button type="primary" danger onClick={handleExitTest} icon={<ExclamationCircleOutlined />}>
+                Avsluta test
               </Button>
             </div>
-          </Card>
-        )}
-      </Content>
 
-      {/* مودال عرض الصورة المكبرة */}
-      <Modal open={isImageModalVisible} footer={null} onCancel={handleCloseModal} centered>
-        <img src={modalImage} alt="Förstorad" style={{ width: '100%' }} />
-      </Modal>
+            <Divider />
 
-      {/* مودال عرض الشرح */}
-      <Modal open={isExplanationVisible} footer={null} onCancel={handleCloseExplanation} centered>
-        <div style={{ padding: '20px' }}>
-          <Title level={4}>Förklaring</Title>
-          {questions[currentQuestionIndex] && questions[currentQuestionIndex].explanation && (
-            <Text>{questions[currentQuestionIndex].explanation}</Text>
-          )}
-          {questions[currentQuestionIndex] && questions[currentQuestionIndex].explanationImages && questions[currentQuestionIndex].explanationImages.length > 0 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '10px',
-              flexWrap: 'wrap',
-              marginTop: '15px'
-            }}>
-              {questions[currentQuestionIndex].explanationImages.map((img, idx) => (
-                <img
-                  key={idx}
-                  src={img}
-                  alt={`Förklaring ${idx + 1}`}
-                  style={{
-                    width: '100%',
-                    maxWidth: '250px',
-                    objectFit: 'contain',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)',
-                  }}
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </Modal>
-    </Layout>
+            {/* Progress Bar */}
+            <Progress percent={progress} status="active" strokeColor="#1890ff" showInfo={false} />
+
+            {/* Current Question Card */}
+            {currentQuestion && (
+              <StyledCard bordered={false}>
+                {/* Mark as Favorite Button */}
+                <Tooltip title={markedQuestions.includes(currentQuestionIndex) ? "Avmarkera fråga" : "Markera fråga"}>
+                  <MarkButton
+                    type="text"
+                    icon={markedQuestions.includes(currentQuestionIndex) ? <StarFilled style={{ color: '#ffd700' }} /> : <StarOutlined />}
+                    onClick={toggleMarkQuestion}
+                  />
+                </Tooltip>
+
+                {/* Question Title */}
+                <Title level={4} style={{ color: '#1890ff' }}>
+                  {currentQuestionIndex + 1}. {currentQuestion.questionText}
+                </Title>
+
+                {/* Question Images */}
+                {currentQuestion.images && currentQuestion.images.length > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '15px' }}>
+                    {currentQuestion.images.map((image, index) => (
+                      <div key={index} style={{ position: 'relative' }}>
+                        <img
+                          src={image}
+                          alt={`Fråga ${index + 1}`}
+                          style={{
+                            width: '100%',
+                            maxWidth: '250px',
+                            objectFit: 'cover',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                            cursor: 'pointer',
+                          }}
+                          onClick={() => handleImageClick(image)}
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                        <FileImageOutlined style={{ position: 'absolute', top: '8px', left: '8px', color: '#fff', fontSize: '24px', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: '50%' }} />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Answer Options */}
+                {currentQuestion.options.map((option, idx) => {
+                  const letter = optionLetters[idx];
+                  const isSelected = selectedAnswer[currentQuestionIndex] === option;
+                  const isCorrect = option === currentQuestion.correctAnswer;
+
+                  return (
+                    <AnswerButton
+                      key={idx}
+                      onClick={() => handleAnswerSelection(option)}
+                      disabled={isAnswered}
+                      isAnswered={isAnswered}
+                      isCorrect={isCorrect}
+                      isSelected={isSelected}
+                      type="text" // Use type="text" to allow custom background colors
+                    >
+                      {/* Conditionally render icons based on answer state */}
+                      {isAnswered && isCorrect && (
+                        <CheckCircleOutlined style={{ marginRight: '10px', fontSize: '20px' }} />
+                      )}
+                      {isAnswered && isSelected && !isCorrect && (
+                        <ExclamationCircleOutlined style={{ marginRight: '10px', fontSize: '20px' }} />
+                      )}
+                      <span style={{
+                        fontWeight: 'bold',
+                        color: isAnswered && isSelected ? '#fff' : '#1890ff',
+                        marginRight: '10px',
+                      }}>
+                        {letter}
+                      </span>
+                      {option}
+                    </AnswerButton>
+                  );
+                })}
+
+                {/* Navigation Buttons */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '20px', flexWrap: 'wrap', gap: '10px' }}>
+                  <Button 
+                    onClick={handlePreviousQuestion} 
+                    disabled={currentQuestionIndex === 0} 
+                    icon={<ArrowLeftOutlined />}
+                  >
+                    Föregående
+                  </Button>
+                  {currentQuestion.explanation && isAnswered && (
+                    <Button 
+                      type="default" 
+                      onClick={handleExplanationClick} 
+                      style={{ backgroundColor: '#fffb8f' }} 
+                      icon={<InfoCircleOutlined />}
+                    >
+                      Förklaring
+                    </Button>
+                  )}
+                  <Button 
+                    type="primary" 
+                    onClick={handleNextQuestion} 
+                    icon={<ArrowRightOutlined />}
+                  >
+                    {currentQuestionIndex === questions.length - 1 ? 'Avsluta' : 'Nästa'}
+                  </Button>
+                </div>
+              </StyledCard>
+            )}
+
+            {/* Image Modal */}
+            <Modal
+              visible={isImageModalVisible}
+              onCancel={handleCloseModal}
+              footer={null}
+              centered
+              width={800}
+              bodyStyle={{ padding: '0' }}
+            >
+              <ImageModal src={modalImage} alt="Förstorad" />
+            </Modal>
+
+            {/* Explanation Modal */}
+            <Modal
+              visible={isExplanationVisible}
+              onCancel={handleCloseExplanation}
+              footer={null}
+              centered
+              width={800}
+            >
+              <div style={{ padding: '20px' }}>
+                <Title level={4} style={{ color: '#1890ff' }}>Förklaring</Title>
+                <ExplanationText>{currentQuestion.explanation}</ExplanationText>
+                {currentQuestion.explanationImages && currentQuestion.explanationImages.length > 0 && (
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    gap: '10px',
+                    flexWrap: 'wrap',
+                    marginTop: '15px'
+                  }}>
+                    {currentQuestion.explanationImages.map((img, idx) => (
+                      <ExplanationImage
+                        key={idx}
+                        src={img}
+                        alt={`Förklaring ${idx + 1}`}
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            </Modal>
+
+            {/* Snackbar for messages */}
+            <Modal
+              visible={snackbar.open}
+              onCancel={handleCloseSnackbar}
+              footer={null}
+              centered
+              destroyOnClose
+            >
+              <Alert 
+                onClose={handleCloseSnackbar} 
+                type={snackbar.severity} 
+                showIcon
+              >
+                {snackbar.message}
+              </Alert>
+            </Modal>
+          </ContentContainer>
+        </Layout>
+      </StyledLayout>
+    </>
   );
 };
 

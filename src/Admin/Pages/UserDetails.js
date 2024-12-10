@@ -22,7 +22,7 @@ function UserDetails() {
     lastName: '',
     email: '',
     phoneNumber: '',
-    idNumber: '',
+    personNumber: '', // تم تغيير idNumber إلى personNumber
     password: '',
     createdAt: '',
     language: '',
@@ -30,7 +30,7 @@ function UserDetails() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Hämta användaruppgifter från databasen
+  // جلب تفاصيل المستخدم من قاعدة البيانات
   const fetchUserDetails = useCallback(async () => {
     try {
       const docRef = doc(db, 'users', userId);
@@ -45,15 +45,15 @@ function UserDetails() {
     }
   }, [userId]);
 
-  // Använd useEffect för att hämta data när sidan laddas
+  // استخدام useEffect لجلب البيانات عند تحميل الصفحة
   useEffect(() => {
     fetchUserDetails();
   }, [fetchUserDetails]);
 
-  // Spara ändringar (ignorera lösenord)
+  // حفظ التعديلات (تجاهل كلمة المرور)
   const handleSave = async () => {
     try {
-      if (!user.firstName || !user.lastName || !user.email || !user.phoneNumber || !user.idNumber) {
+      if (!user.firstName || !user.lastName || !user.email || !user.phoneNumber || !user.personNumber) {
         alert('Var god fyll i alla obligatoriska fält.');
         return;
       }
@@ -69,7 +69,7 @@ function UserDetails() {
         lastName: user.lastName,
         email: user.email,
         phoneNumber: user.phoneNumber,
-        idNumber: user.idNumber,
+        personNumber: user.personNumber, // تم تغيير idNumber إلى personNumber
         language: user.language,
       });
 
@@ -80,7 +80,7 @@ function UserDetails() {
     }
   };
 
-  // Ta bort användare
+  // حذف المستخدم
   const handleDelete = async () => {
     const confirmDelete = window.confirm('Är du säker på att du vill ta bort denna användare?');
     if (confirmDelete) {
@@ -93,12 +93,12 @@ function UserDetails() {
           await axios.post('https://us-central1-korkortsnyckeln-teoriapp.cloudfunctions.net/deleteUser', { uid: userId });
           alert('Användaren har raderats från Firebase Authentication.');
 
-          // Navigera till användarlistan efter radering
+          // التنقل إلى قائمة المستخدمين بعد الحذف
           navigate('/admin/user-list');
         } catch (authError) {
           alert('Ett fel inträffade vid radering av användaren från Firebase Authentication: ' + authError.message);
 
-          // Navigera ändå till användarlistan
+          // التنقل على أي حال إلى قائمة المستخدمين
           navigate('/admin/user-list');
         }
       } catch (dbError) {
@@ -153,8 +153,8 @@ function UserDetails() {
       />
       <TextField
         label="Personnummer"
-        value={user.idNumber}
-        onChange={(e) => setUser({ ...user, idNumber: e.target.value })}
+        value={user.personNumber}
+        onChange={(e) => setUser({ ...user, personNumber: e.target.value })}
         fullWidth
         sx={{ mb: 2 }}
         inputProps={{ maxLength: 12 }}

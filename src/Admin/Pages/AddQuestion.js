@@ -7,7 +7,7 @@ import {
   Typography,
 } from "@mui/material";
 import { Add, Remove, Close } from "@mui/icons-material";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, orderBy } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, storage } from "../../firebaseConfig";
 
@@ -20,7 +20,7 @@ const QuestionManager = () => {
     questionText: "",
     options: [""],
     correctAnswer: "",
-    images: [],  // This holds the images for the question
+    images: [], // This holds the images for the question
     explanation: "",
     explanationImages: [], // This holds the images for the explanation
   });
@@ -46,7 +46,8 @@ const QuestionManager = () => {
 
   const fetchMainCategories = async () => {
     const mainCatCollection = collection(db, "mainCategories");
-    const mainCatSnapshot = await getDocs(mainCatCollection);
+    const mainCatQuery = query(mainCatCollection, orderBy("name"));
+    const mainCatSnapshot = await getDocs(mainCatQuery);
     const mainCatList = mainCatSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
@@ -56,7 +57,11 @@ const QuestionManager = () => {
 
   const fetchSubCategories = async (mainCategoryId) => {
     const subCatCollection = collection(db, "subCategories");
-    const subCatQuery = query(subCatCollection, where("mainCategory", "==", mainCategoryId));
+    const subCatQuery = query(
+      subCatCollection,
+      where("mainCategory", "==", mainCategoryId),
+      orderBy("name")
+    );
     const subCatSnapshot = await getDocs(subCatQuery);
     const subCatList = subCatSnapshot.docs.map((doc) => ({
       id: doc.id,
@@ -67,12 +72,27 @@ const QuestionManager = () => {
 
   const fetchCategories = async () => {
     const categoriesCollection = collection(db, "categories");
-    const categoriesSnapshot = await getDocs(categoriesCollection);
+    const categoriesQuery = query(categoriesCollection, orderBy("name"));
+    const categoriesSnapshot = await getDocs(categoriesQuery);
     const categoriesList = categoriesSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
     setCategories(categoriesList);
+  };
+
+  const fetchCategoriesForSubCategory = async (subCategoryId) => {
+    const categoryQuery = query(
+      collection(db, "categories"),
+      where("subCategory", "==", subCategoryId),
+      orderBy("name")
+    );
+    const categorySnapshot = await getDocs(categoryQuery);
+    const categoryList = categorySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    setCategories(categoryList);
   };
 
   const handleMainCategoryChange = (e) => {
@@ -87,22 +107,11 @@ const QuestionManager = () => {
     fetchCategoriesForSubCategory(selectedSubCategory);
   };
 
-  const fetchCategoriesForSubCategory = async (subCategoryId) => {
-    const categoryQuery = query(collection(db, "categories"), where("subCategory", "==", subCategoryId));
-    const categorySnapshot = await getDocs(categoryQuery);
-    const categoryList = categorySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setCategories(categoryList);
-  };
-
   const handleCategoryChange = (e) => {
     const selectedCategory = e.target.value;
     setNewQuestion({ ...newQuestion, category: selectedCategory });
   };
 
-  // Image upload handlers
   const handleImageUpload = (event) => {
     const files = Array.from(event.target.files);
     const newImages = files.map((file) => ({
@@ -153,11 +162,13 @@ const QuestionManager = () => {
   };
 
   const uploadImagesToStorage = async (images) => {
-    const urls = await Promise.all(images.map(async (image) => {
-      const storageRef = ref(storage, `images/${image.file.name}`);
-      await uploadBytes(storageRef, image.file);
-      return await getDownloadURL(storageRef);
-    }));
+    const urls = await Promise.all(
+      images.map(async (image) => {
+        const storageRef = ref(storage, `images/${image.file.name}`);
+        await uploadBytes(storageRef, image.file);
+        return await getDownloadURL(storageRef);
+      })
+    );
     return urls;
   };
 

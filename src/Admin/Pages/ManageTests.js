@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Table, Button, Select, InputNumber, message, Typography, Space, Modal, Input } from "antd";
 import { db } from "../../firebaseConfig";
-import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where } from "firebase/firestore";
+import { collection, addDoc, updateDoc, deleteDoc, doc, getDocs, query, where, orderBy } from "firebase/firestore";
 
 const { Column } = Table;
 const { Option } = Select;
@@ -30,25 +30,53 @@ const ManageTests = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const testsSnapshot = await getDocs(collection(db, "tests"));
+        // جلب الاختبارات مرتبة حسب الاسم
+        const testsSnapshot = await getDocs(
+          query(collection(db, "tests"), orderBy("name", "asc"))
+        );
         const testsData = testsSnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
         }));
         setTests(testsData);
 
-        const mainCategoriesSnapshot = await getDocs(collection(db, "mainCategories"));
-        setMainCategories(mainCategoriesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        // جلب الأقسام الرئيسية مرتبة
+        const mainCategoriesSnapshot = await getDocs(
+          query(collection(db, "mainCategories"), orderBy("name", "asc"))
+        );
+        setMainCategories(
+          mainCategoriesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+        );
 
-        const subCategoriesSnapshot = await getDocs(collection(db, "subCategories"));
-        setSubCategories(subCategoriesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        // جلب الأقسام الفرعية مرتبة
+        const subCategoriesSnapshot = await getDocs(
+          query(collection(db, "subCategories"), orderBy("name", "asc"))
+        );
+        setSubCategories(
+          subCategoriesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+        );
 
-        const categoriesSnapshot = await getDocs(collection(db, "categories"));
-        setCategories(categoriesSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+        // جلب الفئات مرتبة
+        const categoriesSnapshot = await getDocs(
+          query(collection(db, "categories"), orderBy("name", "asc"))
+        );
+        setCategories(
+          categoriesSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+        );
       } catch (error) {
         message.error("Misslyckades med att hämta data från Firebase");
       }
     };
+
     fetchData();
   }, []);
 
@@ -213,12 +241,12 @@ const ManageTests = () => {
           onChange: (selectedKeys) => setSelectedRowKeys(selectedKeys),
         }}
       >
-        <Column 
-          title="Provnamn" 
-          dataIndex="name" 
-          key="name" 
-          width={150} 
-          sorter={(a, b) => a.name.localeCompare(b.name)} 
+        <Column
+          title="Provnamn"
+          dataIndex="name"
+          key="name"
+          width={150}
+          sorter={(a, b) => a.name.localeCompare(b.name)} // الترتيب الديناميكي
         />
         <Column
           title="Huvudsektion"
